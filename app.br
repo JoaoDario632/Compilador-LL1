@@ -1,0 +1,33 @@
+funcao int soma(int a, int b) {
+    retornar a + b;
+}
+
+principal {
+    int x = 10;
+    int y = 20;
+    int resultado;
+
+    resultado = soma(x, y);
+
+    se (resultado > 20) {
+        resultado = resultado - 5;
+    } senao {
+        resultado = resultado + 5;
+    }
+
+    enquanto (resultado < 50) {
+        resultado = resultado + 1;
+    }
+
+    faca {
+        resultado = resultado * 2;
+    } enquanto (resultado < 200);
+
+    para (int i = 0; i < 10; i = i + 1) {
+        resultado = resultado + i;
+    }
+
+    cadeia texto = "Resultado final: ";
+
+    escrever(texto, resultado);
+}
