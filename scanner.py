@@ -30,16 +30,28 @@ lexemas = [
     ("INCOMPAT",    r'.'),
 ]
 
-def scanner(codigo):
-    tokens = []
-    regex = "|".join(f"(?P<{nome}>{expr})" for nome, expr in lexemas)
-    for match in re.finditer(regex, codigo):
-        tipo = match.lastgroup
-        valor = match.group()
-        if tipo == "IGNORAR":
+def analisador_lexico(codigo_fonte):
+    cadeiaTokens = []
+
+    expressaoRegular = ""
+    for Tokennome , expressao in lexemas:
+        expressaoRegular += f"(?P<{Tokennome }>{expressao})|"
+    expressaoRegular = expressaoRegular[:-1]
+
+    correspondencias = re.finditer(expressaoRegular, codigo_fonte)
+
+    for correspondencia in correspondencias:
+        tipo_token = correspondencia.lastgroup
+        vtoken = correspondencia.group()
+
+        if tipo_token == "IGNORAR":
             continue
-        elif tipo == "INCOMPAT":
-            raise RuntimeError(f"Caractere inesperado: {valor}")
-        tokens.append((tipo, valor))
-    tokens.append(("EOF", None))
-    return tokens
+
+        elif tipo_token == "INCOMPAT":
+            raise RuntimeError(f"Caractere inesperado encontrado: {vtoken}")
+
+        cadeiaTokens.append((tipo_token, vtoken))
+
+    cadeiaTokens.append(("EOF", None))
+
+    return cadeiaTokens
