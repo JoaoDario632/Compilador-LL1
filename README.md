@@ -4,12 +4,14 @@ Este projeto implementa um **compilador simplificado** para uma linguagem fictí
 Ele permite processar código fonte, identificar tokens e validar a sintaxe de programas escritos em sua gramática definida.
 
 ## 📂 Estrutura do Projeto
+```
 ├── main.py # Programa principal
 ├── scanner.py # Analisador léxico (scanner)
 ├── ll1_parser.py # Analisador sintático LL(1)
 ├── grammar.py # Definição da gramática, funções first e follow
 ├── app.br # Exemplo de código da linguagem
 └── README.md # Documentação do projeto
+```
 
 ## 🔹 Funcionalidades
 
