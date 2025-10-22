@@ -14,13 +14,14 @@ grammar = {
 
     # Definição de função
     "FUNCAO_DECL": [["FUNCAO", "TIPO_VAR", "IDENT", "LPAREN", "PARAMS", "RPAREN", "FUNCAO_CORPO"]],
-    "PARAMS": [["TIPO_VAR", "IDENT", "PARAMS'"], ["ε"]],
-    "PARAMS'": [["VIRGULA", "TIPO_VAR", "IDENT", "PARAMS'"], ["ε"]],
+    "PARAMS": [["TIPO_VAR", "IDENT", "PARAMS_OPC"], ["ε"]],
+    "PARAMS_OPC": [["VIRGULA", "TIPO_VAR", "IDENT", "PARAMS_OPC"], ["ε"]],
     "FUNCAO_CORPO": [["LCHAVE", "INSTRUCOES", "RCHAVE"]],
 
     # Blocos de código
     "BLOCO": [["LCHAVE", "INSTRUCOES", "RCHAVE"]],
 
+    # Tipos de instrução possíveis
     "INSTRUCAO": [
         ["DECLARACAO"],
         ["ATRIBUICAO"],
@@ -31,16 +32,15 @@ grammar = {
         ["ESCRITA"]
     ],
 
-    # Retorno de função
+    # Retorno
     "RETORNO_INST": [["RETORNO", "EXPRESSAO", "PONTOVIRG"]],
 
     # Declarações de variáveis
     "DECLARACAO": [["TIPO_VAR", "IDENT", "DECLARACAO_OPC"]],
     "DECLARACAO_OPC": [["ATRIB", "EXPRESSAO", "PONTOVIRG"], ["PONTOVIRG"]],
 
-    # Atribuições e retorno
+    # Atribuições
     "ATRIBUICAO": [["IDENT", "ATRIB", "EXPRESSAO", "PONTOVIRG"]],
-    "RETORNO": [["RETORNO", "EXPRESSAO", "PONTOVIRG"]],
 
     # Estruturas de controle
     "CONDICIONAL": [["SE", "LPAREN", "EXPRESSAO", "RPAREN", "BLOCO", "SENAO_OPC"]],
@@ -52,16 +52,22 @@ grammar = {
         ["PARA", "LPAREN", "DECLARACAO", "EXPRESSAO", "PONTOVIRG", "ATRIBUICAO", "RPAREN", "BLOCO"]
     ],
 
-    # Escrita e chamadas
+    # Escrita e chamadas de função
     "ESCRITA": [["IDENT", "LPAREN", "ARG_LIST", "RPAREN", "PONTOVIRG"]],
     "CHAMADA_TERM": [["IDENT", "LPAREN", "ARG_LIST", "RPAREN"]],
     "CHAMADA_INST": [["CHAMADA_TERM", "PONTOVIRG"]],
 
     # Expressões
-    "ARG_LIST": [["EXPRESSAO", "ARG_LIST'"], ["ε"]],
-    "ARG_LIST'": [["VIRGULA", "EXPRESSAO", "ARG_LIST'"], ["ε"]],
-    "EXPRESSAO": [["TERMO", "EXPRESSAO'"]],
-    "EXPRESSAO'": [["OPER_ARIT", "TERMO", "EXPRESSAO'"], ["COMPAR", "TERMO", "EXPRESSAO'"], ["ε"]],
+    "ARG_LIST": [["EXPRESSAO", "ARG_LIST_OPC"], ["ε"]],
+    "ARG_LIST_OPC": [["VIRGULA", "EXPRESSAO", "ARG_LIST_OPC"], ["ε"]],
+
+    "EXPRESSAO": [["TERMO", "EXPRESSAO_OPC"]],
+    "EXPRESSAO_OPC": [
+        ["OPER_ARIT", "TERMO", "EXPRESSAO_OPC"],
+        ["COMPAR", "TERMO", "EXPRESSAO_OPC"],
+        ["ε"]
+    ],
+
     "TERMO": [
         ["IDENT"],
         ["NUMERO_INT"],
@@ -71,7 +77,12 @@ grammar = {
         ["LPAREN", "EXPRESSAO", "RPAREN"],
         ["CHAMADA_TERM"]
     ],
+    "INSTRUCOES": [
+        ["INSTRUCAO", "INSTRUCOES"],
+        ["ε"]
+    ]
 }
+
 def first(simbolo, gramatica, visitados=None):
     if visitados is None:
         visitados = set()
@@ -113,11 +124,11 @@ def follow(simbolo, gramatica, inicio="PROGRAMA"):
                 if producao[i] == simbolo:
                     if i + 1 < len(producao):
                         prox = producao[i + 1]
-                        viznhosProx = first(prox, gramatica)
-                        for s in viznhosProx:
+                        vizinhos = first(prox, gramatica)
+                        for s in vizinhos:
                             if s != "ε":
                                 segundo.add(s)
-                        if "ε" in viznhosProx:
+                        if "ε" in vizinhos:
                             segundo |= follow(cabeca, gramatica)
                     else:
                         if cabeca != simbolo:
