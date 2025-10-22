@@ -48,7 +48,7 @@ PRINCIPAL_BLOCO ::= principal { INSTRUCOES }
 ...
 EXPRESSAO ::= TERMO EXPRESSAO'
 TERMO ::= IDENT | NUMERO_INT | NUMERO_REAL | PALAVRA | BOOLEANO | (EXPRESSAO) | CHAMADA_TERM
-
+...
 ## ▶️ Como Executar
 
 - Abra o terminal na pasta do projeto.
