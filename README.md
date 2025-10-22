@@ -41,14 +41,13 @@ Ele permite processar código fonte, identificar tokens e validar a sintaxe de p
 
 A linguagem aceita programas do tipo:
 
-```text
-programa ::= DECLARACOES PRINCIPAL_BLOCO
-DECLARACOES ::= FUNCAO_DECL DECLARACOES | DECLARACAO DECLARACOES | ε
-PRINCIPAL_BLOCO ::= principal { INSTRUCOES }
-...
+- programa ::= DECLARACOES PRINCIPAL_BLOCO
+- DECLARACOES ::= FUNCAO_DECL DECLARACOES | DECLARACAO DECLARACOES | ε
+- PRINCIPAL_BLOCO ::= principal { INSTRUCOES }
+
 EXPRESSAO ::= TERMO EXPRESSAO'
 TERMO ::= IDENT | NUMERO_INT | NUMERO_REAL | PALAVRA | BOOLEANO | (EXPRESSAO) | CHAMADA_TERM
-...
+
 ## ▶️ Como Executar
 
 - Abra o terminal na pasta do projeto.
