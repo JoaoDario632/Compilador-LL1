@@ -1,73 +1,87 @@
 from grammar import grammar, first, follow
 
-class LL1Parser:
-    def __init__(self, grammar):
-        self.grammar = grammar
-        self.tabela = self.build_table()
+class AnalisadorSintaticoLL1:
+    def __init__(self, gramatica):
+        self.gramatica = gramatica
+        self.analiseTabela = self.Tabela()
 
-    def build_table(self):
+    def Tabela(self):
         tabela = {}
-        for head, bodies in self.grammar.items():
-            for body in bodies:
-                first_set = set()
-                for sym in body:
-                    f = first(sym, self.grammar)
-                    first_set |= (f - {"ε"})
-                    if "ε" not in f:
+
+        for cabeca, corpos in self.gramatica.items():
+            for corpo in corpos:
+                conjPrimeiro = set()
+
+                for simbolo in corpo:
+                    primeiros = first(simbolo, self.gramatica)
+                    conjPrimeiro |= (primeiros - {"ε"})
+                    if "ε" not in primeiros:
                         break
                 else:
-                    first_set.add("ε")
+                    conjPrimeiro.add("ε")
 
-                for term in first_set:
-                    if term != "ε":
-                        tabela[(head, term)] = body
+                for terminal in conjPrimeiro:
+                    if terminal != "ε":
+                        tabela[(cabeca, terminal)] = corpo
 
-                if "ε" in first_set:
-                    for f in follow(head, self.grammar):
-                        tabela[(head, f)] = body
+                if "ε" in conjPrimeiro:
+                    for f in follow(cabeca, self.gramatica):
+                        tabela[(cabeca, f)] = corpo
+
         return tabela
 
-    def parse(self, tokens):
-        stack = ["EOF", "PROGRAMA"]
-        pos = 0
-        token_type = tokens[pos][0]
+    def analisar(self, tokens):
+        pilha = ["EOF", "PROGRAMA"]
+        posicao = 0
+        ttoken = tokens[posicao][0]
 
-        while stack:
-            top = stack.pop()
-            if top == token_type:
-                pos += 1
-                if pos < len(tokens):
-                    token_type = tokens[pos][0]
-            elif top in self.grammar:
-                rule = self.tabela.get((top, token_type))
-                if not rule:
-                    expected = [k[1] for k in self.tabela if k[0] == top]
-                    raise SyntaxError(f"Erro de sintaxe: esperado um de {expected}, encontrado {token_type}")
-                for sym in reversed(rule):
-                    if sym != "ε":
-                        stack.append(sym)
-            elif top == "ε":
+        while pilha:
+            topo = pilha.pop()
+
+            if topo == ttoken:
+                posicao += 1
+                if posicao < len(tokens):
+                    ttoken = tokens[posicao][0]
+            elif topo in self.gramatica:
+                regra = self.analiseTabela.get((topo, ttoken))
+
+                if not regra:
+                    esperados = [k[1] for k in self.analiseTabela if k[0] == topo]
+                    raise SyntaxError(
+                        f"Erro de sintaxe: esperado um de {esperados}, mas foi encontrado {ttoken}"
+                    )
+
+                for simbolo in reversed(regra):
+                    if simbolo != "ε":
+                        pilha.append(simbolo)
+
+            elif topo == "ε":
                 continue
             else:
-                raise SyntaxError(f"Erro inesperado: {token_type}")
+                raise SyntaxError(f"Erro inesperado: {ttoken}")
 
-        print("\nAnálise sintática concluída com sucesso.")
+        print("\nAnálise sintática concluída com sucesso")
 
-def first(symbol, grammar, visitado=None):
-    if visitado is None:
-        visitado = set()
-    if symbol not in grammar:
-        return {symbol}  # terminal
-    if symbol in visitado:
+def primeiro(simbolo, gramatica, visitados=None):
+    if visitados is None:
+        visitados = set()
+
+    if simbolo not in gramatica:
+        return {simbolo}
+
+    if simbolo in visitados:
         return set()
-    visitado.add(symbol)
-    first_set = set()
-    for rule in grammar[symbol]:
-        for sym in rule:
-            f = first(sym, grammar, visitado.copy())
-            first_set |= (f - {"ε"})
-            if "ε" not in f:
+
+    visitados.add(simbolo)
+    conjPrimeiro = set()
+
+    for regra in gramatica[simbolo]:
+        for SImboloRegra in regra:
+            primeiros = primeiro(SImboloRegra, gramatica, visitados.copy())
+            conjPrimeiro |= (primeiros - {"ε"})
+            if "ε" not in primeiros:
                 break
         else:
-            first_set.add("ε")
-    return first_set
+            conjPrimeiro.add("ε")
+
+    return conjPrimeiro
