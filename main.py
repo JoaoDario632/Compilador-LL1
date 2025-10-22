@@ -13,4 +13,4 @@ if __name__ == "__main__":
 
     print("\n=== ANÁLISE SINTÁTICA ===")
     parser = AnalisadorSintaticoLL1(grammar)
-    parser.parse(tokens)
+    parser.analisar(tokens)
