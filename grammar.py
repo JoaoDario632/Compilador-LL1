@@ -1,27 +1,43 @@
 grammar = {
-    # O programa pode começar com funções e/ou declarações antes do bloco principal
+    # PROGRAMA
     "PROGRAMA": [["DECLARACOES", "PRINCIPAL_BLOCO"]],
 
-    # Declarações no topo — podem ser funções ou variáveis
+    # Declarações antes do principal
     "DECLARACOES": [
         ["FUNCAO_DECL", "DECLARACOES"],
         ["DECLARACAO", "DECLARACOES"],
         ["ε"]
     ],
 
-    # Função principal obrigatória
+    # Bloco principal
     "PRINCIPAL_BLOCO": [["PRINCIPAL", "LCHAVE", "INSTRUCOES", "RCHAVE"]],
 
-    # Definição de função
+    # Funções
     "FUNCAO_DECL": [["FUNCAO", "TIPO_VAR", "IDENT", "LPAREN", "PARAMS", "RPAREN", "FUNCAO_CORPO"]],
-    "PARAMS": [["TIPO_VAR", "IDENT", "PARAMS_OPC"], ["ε"]],
-    "PARAMS_OPC": [["VIRGULA", "TIPO_VAR", "IDENT", "PARAMS_OPC"], ["ε"]],
     "FUNCAO_CORPO": [["LCHAVE", "INSTRUCOES", "RCHAVE"]],
 
-    # Blocos de código
+    "PARAMS": [["TIPO_VAR", "IDENT", "PARAMS_OPC"], ["ε"]],
+    "PARAMS_OPC": [["VIRGULA", "TIPO_VAR", "IDENT", "PARAMS_OPC"], ["ε"]],
+
+    # Tipos de variáveis (agora inclui cadeia)
+    "TIPO_VAR": [
+        ["INT"],
+        ["FLOAT"],
+        ["STRING"],
+        ["BOOL"],
+        ["CADEIA"]
+    ],
+
+    # Bloco genérico
     "BLOCO": [["LCHAVE", "INSTRUCOES", "RCHAVE"]],
 
-    # Tipos de instrução possíveis
+    # Sequência de instruções
+    "INSTRUCOES": [
+        ["INSTRUCAO", "INSTRUCOES"],
+        ["ε"]
+    ],
+
+    # Instrução genérica
     "INSTRUCAO": [
         ["DECLARACAO"],
         ["ATRIBUICAO"],
@@ -32,35 +48,42 @@ grammar = {
         ["ESCRITA"]
     ],
 
-    # Retorno
-    "RETORNO_INST": [["RETORNO", "EXPRESSAO", "PONTOVIRG"]],
-
-    # Declarações de variáveis
+    # Declarações
     "DECLARACAO": [["TIPO_VAR", "IDENT", "DECLARACAO_OPC"]],
     "DECLARACAO_OPC": [["ATRIB", "EXPRESSAO", "PONTOVIRG"], ["PONTOVIRG"]],
 
     # Atribuições
     "ATRIBUICAO": [["IDENT", "ATRIB", "EXPRESSAO", "PONTOVIRG"]],
 
+    # Retorno
+    "RETORNO_INST": [["RETORNO", "EXPRESSAO", "PONTOVIRG"]],
+
     # Estruturas de controle
     "CONDICIONAL": [["SE", "LPAREN", "EXPRESSAO", "RPAREN", "BLOCO", "SENAO_OPC"]],
     "SENAO_OPC": [["SENAO", "BLOCO"], ["ε"]],
 
+    # Loops
     "LOOP": [
         ["ENQUANTO", "LPAREN", "EXPRESSAO", "RPAREN", "BLOCO"],
         ["FACA", "BLOCO", "ENQUANTO", "LPAREN", "EXPRESSAO", "RPAREN", "PONTOVIRG"],
-        ["PARA", "LPAREN", "DECLARACAO", "EXPRESSAO", "PONTOVIRG", "ATRIBUICAO", "RPAREN", "BLOCO"]
+        ["PARA", "LPAREN", "DECLARACAO_PARA", "EXPRESSAO", "PONTOVIRG", "ATRIBUICAO", "RPAREN", "BLOCO"]
     ],
 
-    # Escrita e chamadas de função
-    "ESCRITA": [["IDENT", "LPAREN", "ARG_LIST", "RPAREN", "PONTOVIRG"]],
+    # Declaração dentro do "para"
+    "DECLARACAO_PARA": [["TIPO_VAR", "IDENT", "ATRIB", "EXPRESSAO", "PONTOVIRG"]],
+
+    # Escrita
+    "ESCRITA": [["ESCREVER", "LPAREN", "ARG_LIST", "RPAREN", "PONTOVIRG"]],
+
+    # Chamada de função
     "CHAMADA_TERM": [["IDENT", "LPAREN", "ARG_LIST", "RPAREN"]],
     "CHAMADA_INST": [["CHAMADA_TERM", "PONTOVIRG"]],
 
-    # Expressões
+    # Argumentos
     "ARG_LIST": [["EXPRESSAO", "ARG_LIST_OPC"], ["ε"]],
     "ARG_LIST_OPC": [["VIRGULA", "EXPRESSAO", "ARG_LIST_OPC"], ["ε"]],
 
+    # Expressões
     "EXPRESSAO": [["TERMO", "EXPRESSAO_OPC"]],
     "EXPRESSAO_OPC": [
         ["OPER_ARIT", "TERMO", "EXPRESSAO_OPC"],
@@ -73,16 +96,14 @@ grammar = {
         ["NUMERO_INT"],
         ["NUMERO_REAL"],
         ["PALAVRA"],
+        ["CADEIA_LITERAL"],
         ["BOOLEANO"],
         ["LPAREN", "EXPRESSAO", "RPAREN"],
         ["CHAMADA_TERM"]
     ],
-    "INSTRUCOES": [
-        ["INSTRUCAO", "INSTRUCOES"],
-        ["ε"]
-    ]
 }
 
+# === FIRST ===
 def first(simbolo, gramatica, visitados=None):
     if visitados is None:
         visitados = set()
@@ -101,9 +122,7 @@ def first(simbolo, gramatica, visitados=None):
 
         for atual in producao:
             conjunto_primeiro = first(atual, gramatica, visitados.copy())
-            for s in conjunto_primeiro:
-                if s != "ε":
-                    conjPrimeiro.add(s)
+            conjPrimeiro |= (conjunto_primeiro - {"ε"})
             if "ε" not in conjunto_primeiro:
                 encontrou_vazio = False
                 break
@@ -113,6 +132,7 @@ def first(simbolo, gramatica, visitados=None):
     return conjPrimeiro
 
 
+# === FOLLOW ===
 def follow(simbolo, gramatica, inicio="PROGRAMA"):
     segundo = set()
     if simbolo == inicio:
@@ -125,9 +145,7 @@ def follow(simbolo, gramatica, inicio="PROGRAMA"):
                     if i + 1 < len(producao):
                         prox = producao[i + 1]
                         vizinhos = first(prox, gramatica)
-                        for s in vizinhos:
-                            if s != "ε":
-                                segundo.add(s)
+                        segundo |= (vizinhos - {"ε"})
                         if "ε" in vizinhos:
                             segundo |= follow(cabeca, gramatica)
                     else:

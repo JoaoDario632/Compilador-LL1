@@ -3,33 +3,37 @@ from grammar import grammar, first, follow
 class AnalisadorSintaticoLL1:
     def __init__(self, gramatica):
         self.gramatica = gramatica
-        self.analiseTabela = self.Tabela()
+        self.analiseTabela = self.construir_tabela_ll1()  # corrigido o nome
 
-    def Tabela(self):
+
+    def construir_tabela_ll1(self):
         tabela = {}
 
-        for cabeca, corpos in self.gramatica.items():
-            for corpo in corpos:
+        for cabeca, producoes in self.gramatica.items():
+            for producao in producoes:
+                # calcula FIRST de toda a produção
                 conjPrimeiro = set()
+                encontrou_vazio = True
 
-                for simbolo in corpo:
+                for simbolo in producao:
                     primeiros = first(simbolo, self.gramatica)
                     conjPrimeiro |= (primeiros - {"ε"})
                     if "ε" not in primeiros:
+                        encontrou_vazio = False
                         break
-                else:
+                if encontrou_vazio:
                     conjPrimeiro.add("ε")
 
-                for terminal in conjPrimeiro:
-                    if terminal != "ε":
-                        tabela[(cabeca, terminal)] = corpo
-
+                # adiciona as regras à tabela LL(1)
+                for simbolo in conjPrimeiro - {"ε"}:
+                    tabela[(cabeca, simbolo)] = producao
                 if "ε" in conjPrimeiro:
-                    for f in follow(cabeca, self.gramatica):
-                        tabela[(cabeca, f)] = corpo
+                    for simbolo in follow(cabeca, self.gramatica):
+                        tabela[(cabeca, simbolo)] = producao
 
         return tabela
 
+    # === ANÁLISE SINTÁTICA ===
     def analisar(self, tokens):
         pilha = ["EOF", "PROGRAMA"]
         posicao = 0
@@ -42,6 +46,7 @@ class AnalisadorSintaticoLL1:
                 posicao += 1
                 if posicao < len(tokens):
                     ttoken = tokens[posicao][0]
+
             elif topo in self.gramatica:
                 regra = self.analiseTabela.get((topo, ttoken))
 
@@ -60,28 +65,4 @@ class AnalisadorSintaticoLL1:
             else:
                 raise SyntaxError(f"Erro inesperado: {ttoken}")
 
-        print("\nAnálise sintática concluída com sucesso")
-
-def primeiro(simbolo, gramatica, visitados=None):
-    if visitados is None:
-        visitados = set()
-
-    if simbolo not in gramatica:
-        return {simbolo}
-
-    if simbolo in visitados:
-        return set()
-
-    visitados.add(simbolo)
-    conjPrimeiro = set()
-
-    for regra in gramatica[simbolo]:
-        for SImboloRegra in regra:
-            primeiros = primeiro(SImboloRegra, gramatica, visitados.copy())
-            conjPrimeiro |= (primeiros - {"ε"})
-            if "ε" not in primeiros:
-                break
-        else:
-            conjPrimeiro.add("ε")
-
-    return conjPrimeiro
+        print("\n Análise sintática concluída com sucesso!")
