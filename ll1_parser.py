@@ -3,9 +3,7 @@ from grammar import grammar, first, follow
 class AnalisadorSintaticoLL1:
     def __init__(self, gramatica):
         self.gramatica = gramatica
-        self.analiseTabela = self.construir_tabela_ll1()  # corrigido o nome
-
-
+        self.analiseTabela = self.construir_tabela_ll1()  
     def construir_tabela_ll1(self):
         tabela = {}
 
@@ -48,7 +46,7 @@ class AnalisadorSintaticoLL1:
                     ttoken = tokens[posicao][0]
 
             elif topo in self.gramatica:
-                regra = self.analiseTabela.get((topo, ttoken))
+                regra = self.analiseTabela.get((topo, ttoken)) #Analisar aqui
 
                 if not regra:
                     esperados = [k[1] for k in self.analiseTabela if k[0] == topo]

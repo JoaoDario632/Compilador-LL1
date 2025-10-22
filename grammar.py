@@ -19,14 +19,6 @@ grammar = {
     "PARAMS": [["TIPO_VAR", "IDENT", "PARAMS_OPC"], ["ε"]],
     "PARAMS_OPC": [["VIRGULA", "TIPO_VAR", "IDENT", "PARAMS_OPC"], ["ε"]],
 
-    # Tipos de variáveis (agora inclui cadeia)
-    "TIPO_VAR": [
-        ["INT"],
-        ["FLOAT"],
-        ["STRING"],
-        ["BOOL"],
-        ["CADEIA"]
-    ],
 
     # Bloco genérico
     "BLOCO": [["LCHAVE", "INSTRUCOES", "RCHAVE"]],
@@ -83,19 +75,28 @@ grammar = {
     "ARG_LIST": [["EXPRESSAO", "ARG_LIST_OPC"], ["ε"]],
     "ARG_LIST_OPC": [["VIRGULA", "EXPRESSAO", "ARG_LIST_OPC"], ["ε"]],
 
-    # Expressões
-    "EXPRESSAO": [["TERMO", "EXPRESSAO_OPC"]],
-    "EXPRESSAO_OPC": [
-        ["OPER_ARIT", "TERMO", "EXPRESSAO_OPC"],
-        ["COMPAR", "TERMO", "EXPRESSAO_OPC"],
+    # EXPRESSÕES (versão enxuta e funcional)
+    "EXPRESSAO": [["EXP_COMPARACAO"]],
+
+    # Comparações (>, <, >=, <=, ==, !=)
+    "EXP_COMPARACAO": [["EXP_ARIT", "EXP_COMPARACAO_OPC"]],
+    "EXP_COMPARACAO_OPC": [
+        ["COMPAR", "EXP_ARIT"],
         ["ε"]
     ],
 
+    # Operações aritméticas (+, -, *, /, etc.)
+    "EXP_ARIT": [["TERMO", "EXP_ARIT_OPC"]],
+    "EXP_ARIT_OPC": [
+        ["OPER_ARIT", "TERMO", "EXP_ARIT_OPC"],
+        ["ε"]
+    ],
+
+    # Termos (valores, variáveis, agrupamentos, chamadas)
     "TERMO": [
         ["IDENT"],
         ["NUMERO_INT"],
         ["NUMERO_REAL"],
-        ["PALAVRA"],
         ["CADEIA_LITERAL"],
         ["BOOLEANO"],
         ["LPAREN", "EXPRESSAO", "RPAREN"],
@@ -103,7 +104,6 @@ grammar = {
     ],
 }
 
-# === FIRST ===
 def first(simbolo, gramatica, visitados=None):
     if visitados is None:
         visitados = set()
@@ -132,7 +132,6 @@ def first(simbolo, gramatica, visitados=None):
     return conjPrimeiro
 
 
-# === FOLLOW ===
 def follow(simbolo, gramatica, inicio="PROGRAMA"):
     segundo = set()
     if simbolo == inicio:
