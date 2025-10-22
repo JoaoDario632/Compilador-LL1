@@ -75,7 +75,7 @@ TERMO ::= IDENT | NUMERO_INT | NUMERO_REAL | PALAVRA | BOOLEANO | (EXPRESSAO) | 
           <a href="https://github.com/FrrTiago">
          <img src="https://avatars.githubusercontent.com/u/132114628?v=4" style="border-radius: 50%" width="100px;" alt="ferreira"/>
          <br />
-         <sub><b>Tiago Ferreira 💻👑</b></sub>
+         <sub><b>Tiago Ferreira 💻</b></sub>
        </a>
      </td>
   </tr>
