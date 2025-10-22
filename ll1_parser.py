@@ -44,9 +44,14 @@ class AnalisadorSintaticoLL1:
                 posicao += 1
                 if posicao < len(tokens):
                     ttoken = tokens[posicao][0]
+<<<<<<< HEAD
 
             elif topo in self.gramatica:
                 regra = self.analiseTabela.get((topo, ttoken)) #Analisar aqui
+=======
+            elif topo in self.gramatica: 
+                regra = self.analiseTabela.get((topo, ttoken))
+>>>>>>> 66e075a (corrigindo erros de testes)
 
                 if not regra:
                     esperados = [k[1] for k in self.analiseTabela if k[0] == topo]
