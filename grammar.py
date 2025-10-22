@@ -21,16 +21,15 @@ grammar = {
     # Blocos de código
     "BLOCO": [["LCHAVE", "INSTRUCOES", "RCHAVE"]],
 
-  "INSTRUCAO": [
-    ["DECLARACAO"],
-    ["ATRIBUICAO"],
-    ["CONDICIONAL"],
-    ["LOOP"],
-    ["RETORNO_INST"], 
-    ["CHAMADA_INST"],
-    ["ESCRITA"]
-],
-
+    "INSTRUCAO": [
+        ["DECLARACAO"],
+        ["ATRIBUICAO"],
+        ["CONDICIONAL"],
+        ["LOOP"],
+        ["RETORNO_INST"],
+        ["CHAMADA_INST"],
+        ["ESCRITA"]
+    ],
 
     # Retorno de função
     "RETORNO_INST": [["RETORNO", "EXPRESSAO", "PONTOVIRG"]],
@@ -73,42 +72,54 @@ grammar = {
         ["CHAMADA_TERM"]
     ],
 }
+def first(simbolo, gramatica, visitados=None):
+    if visitados is None:
+        visitados = set()
 
+    if simbolo not in gramatica:
+        return {simbolo}
 
-def first(symbol, grammar, visitado=None):
-    if visitado is None:
-        visitado = set()
-    if symbol not in grammar:
-        return {symbol}
-    if symbol in visitado:
+    if simbolo in visitados:
         return set()
-    visitado.add(symbol)
-    firstSet = set()
-    for rule in grammar[symbol]:
-        for sym in rule:
-            f = first(sym, grammar, visitado.copy())
-            firstSet |= (f - {"ε"})
-            if "ε" not in f:
+
+    visitados.add(simbolo)
+    conjPrimeiro = set()
+
+    for producao in gramatica[simbolo]:
+        encontrou_vazio = True
+
+        for atual in producao:
+            conjunto_primeiro = first(atual, gramatica, visitados.copy())
+            for s in conjunto_primeiro:
+                if s != "ε":
+                    conjPrimeiro.add(s)
+            if "ε" not in conjunto_primeiro:
+                encontrou_vazio = False
                 break
-        else:
-            firstSet.add("ε")
-    return firstSet
+        if encontrou_vazio:
+            conjPrimeiro.add("ε")
+
+    return conjPrimeiro
 
 
-def follow(symbol, grammar, start_symbol="PROGRAMA"):
-    followset = set()
-    if symbol == start_symbol:
-        followset.add("EOF")
-    for head, bodies in grammar.items():
-        for body in bodies:
-            for i, sym in enumerate(body):
-                if sym == symbol:
-                    if i + 1 < len(body):
-                        next_sym = body[i + 1]
-                        followset |= (first(next_sym, grammar) - {"ε"})
-                        if "ε" in first(next_sym, grammar):
-                            followset |= follow(head, grammar)
+def follow(simbolo, gramatica, inicio="PROGRAMA"):
+    segundo = set()
+    if simbolo == inicio:
+        segundo.add("EOF")
+
+    for cabeca, producoes in gramatica.items():
+        for producao in producoes:
+            for i in range(len(producao)):
+                if producao[i] == simbolo:
+                    if i + 1 < len(producao):
+                        prox = producao[i + 1]
+                        viznhosProx = first(prox, gramatica)
+                        for s in viznhosProx:
+                            if s != "ε":
+                                segundo.add(s)
+                        if "ε" in viznhosProx:
+                            segundo |= follow(cabeca, gramatica)
                     else:
-                        if head != symbol:
-                            followset |= follow(head, grammar)
-    return followset
+                        if cabeca != simbolo:
+                            segundo |= follow(cabeca, gramatica)
+    return segundo
