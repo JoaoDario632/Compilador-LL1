@@ -1,5 +1,4 @@
 from grammar import grammar, first, follow
-
 class AnalisadorSintaticoLL1:
     def __init__(self, gramatica):
         self.gramatica = gramatica
@@ -9,7 +8,7 @@ class AnalisadorSintaticoLL1:
 
         for cabeca, producoes in self.gramatica.items():
             for producao in producoes:
-                # calcula FIRST de toda a produção
+             
                 conjPrimeiro = set()
                 encontrou_vazio = True
 
@@ -44,6 +43,8 @@ class AnalisadorSintaticoLL1:
                 posicao += 1
                 if posicao < len(tokens):
                     ttoken = tokens[posicao][0]
+                continue
+
 
             elif topo in self.gramatica:
                 regra = self.analiseTabela.get((topo, ttoken)) #Analisar aqui
@@ -60,7 +61,10 @@ class AnalisadorSintaticoLL1:
 
             elif topo == "ε":
                 continue
+            elif topo == ttoken:
+                posicao += 1
+                if posicao < len(tokens):
+                    ttoken = tokens[posicao][0]
             else:
-                raise SyntaxError(f"Erro inesperado: {ttoken}")
-
+                raise SyntaxError(f"Erro inesperado: {ttoken} (esperava {topo})")
         print("\n Análise sintática concluída com sucesso!")

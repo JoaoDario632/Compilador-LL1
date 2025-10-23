@@ -1,5 +1,4 @@
 import re
-
 lexemas = [
     ("PRINCIPAL",   r'principal'),
     ("FUNCAO",      r'funcao'),
