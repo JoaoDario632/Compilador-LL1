@@ -1,37 +1,49 @@
-#grammar.py
+# grammar.py
+
 grammar = {
     # ======= PROGRAMA =======
     "PROGRAMA": [["DECL_FUNCOES", "FUNCAO_PRINCIPAL"]],
 
-    # Declarações de funções
+    # Declarações de funções antes do principal
     "DECL_FUNCOES": [["FUNCAO_DEF", "DECL_FUNCOES"], ["ε"]],
+
+    # Definição de função
     "FUNCAO_DEF": [["FUNCAO", "TIPO_VAR", "IDENT", "LPAREN", "PARAMS_OPC", "RPAREN", "BLOCO"]],
 
     # Função principal
     "FUNCAO_PRINCIPAL": [["PRINCIPAL", "BLOCO"]],
 
     # ======= BLOCOS =======
-    "BLOCO": [["LCHAVE", "DECLS_OPC", "COMANDOS", "RCHAVE"]],
-    "DECLS_OPC": [["DECLARACAO", "DECLS_OPC"], ["ε"]],
+    "BLOCO": [["LCHAVE", "BLOCO_INTERNO", "RCHAVE"]],
+
+    # Dentro do bloco, aceita declarações de variáveis + comandos
+    "BLOCO_INTERNO": [["DECL_VAR_BLOCO", "COMANDOS"], ["COMANDOS"]],
+
+    # Declarações de variáveis dentro de blocos
+    "DECL_VAR_BLOCO": [["DECLARACAO", "DECL_VAR_BLOCO"], ["ε"]],
+
     "COMANDOS": [["COMANDO", "COMANDOS"], ["ε"]],
 
     # ======= COMANDOS =======
     "COMANDO": [
-        ["DECLARACAO"],
         ["SE_INST"],
         ["ENQUANTO_INST"],
         ["PARA_INST"],
         ["RETORNO_INST"],
-        ["ATRIB_INST"]
+        ["ATRIB_INST"],
+        ["CHAMADA_FUNCAO"]
     ],
 
-    # ======= DECLARAÇÕES =======
+    # ======= DECLARAÇÃO =======
     "DECLARACAO": [["TIPO_VAR", "IDENT", "DECL_INICIAL_OPC", "PONTOVIRG"]],
     "DECL_INICIAL_OPC": [["ATRIB", "EXPRESSAO"], ["ε"]],
 
     # ======= ATRIBUIÇÕES =======
     "ATRIB_INST": [["IDENT", "ATRIB", "EXPRESSAO", "PONTOVIRG"]],
     "RETORNO_INST": [["RETORNO", "EXPRESSAO", "PONTOVIRG"]],
+
+    # ======= CHAMADA DE FUNÇÃO COMO COMANDO =======
+    "CHAMADA_FUNCAO": [["IDENT", "LPAREN", "PARAMS_OPC", "RPAREN", "PONTOVIRG"]],
 
     # ======= ESTRUTURAS DE CONTROLE =======
     "SE_INST": [["SE", "LPAREN", "EXPRESSAO", "RPAREN", "BLOCO", "SENAO_PARTE"]],
@@ -78,7 +90,6 @@ def first(simbolo, gramatica, visitados=None):
     if simbolo in terminais or simbolo not in gramatica:
         return {simbolo}
 
-    # Evita recursão infinita em ciclos diretos
     if simbolo in visitados:
         return set()
 
@@ -97,7 +108,7 @@ def first(simbolo, gramatica, visitados=None):
             conj.add("ε")
     return conj
 
-
+# ======= FOLLOW =======
 def follow(simbolo, gramatica, inicio="PROGRAMA"):
     segundo = set()
     if simbolo == inicio:
