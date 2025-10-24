@@ -1,6 +1,7 @@
-#grammar.py
+# grammar.py
+# ===== Definição da gramática =====
 grammar = {
-    # ======= PROGRAMA =======
+    # ===== PROGRAMA =====
     "PROGRAMA": [["DECL_FUNCOES", "FUNCAO_PRINCIPAL"]],
 
     # Declarações de funções
@@ -10,11 +11,11 @@ grammar = {
     # Função principal
     "FUNCAO_PRINCIPAL": [["PRINCIPAL", "BLOCO"]],
 
-    # ======= BLOCOS =======
+    # ===== Blocos =====
     "BLOCO": [["LCHAVE", "DECLS_OPC", "COMANDOS", "RCHAVE"]],
     "COMANDOS": [["COMANDO", "COMANDOS"], ["ε"]],
 
-    # ======= COMANDOS =======
+    # ===== Comandos =====
     "COMANDO": [
         ["DECLARACAO"],
         ["SE_INST"],
@@ -24,21 +25,21 @@ grammar = {
         ["ATRIB_INST"]
     ],
 
-    # ======= DECLARAÇÕES =======
+    # ===== Declarações =====
     "DECLARACAO": [["TIPO_VAR", "IDENT", "DECL_INICIAL_OPC", "PONTOVIRG"]],
     "DECL_INICIAL_OPC": [["ATRIB", "EXPRESSAO"], ["ε"]],
 
-    # ======= ATRIBUIÇÕES =======
+    # ===== Atribuições =====
     "ATRIB_INST": [["IDENT", "ATRIB", "EXPRESSAO", "PONTOVIRG"]],
     "RETORNO_INST": [["RETORNO", "EXPRESSAO", "PONTOVIRG"]],
 
-    # ======= ESTRUTURAS DE CONTROLE =======
+    # ===== Estruturas de controle =====
     "SE_INST": [["SE", "LPAREN", "EXPRESSAO", "RPAREN", "BLOCO", "SENAO_PARTE"]],
     "SENAO_PARTE": [["SENAO", "BLOCO"], ["ε"]],
     "ENQUANTO_INST": [["ENQUANTO", "LPAREN", "EXPRESSAO", "RPAREN", "BLOCO"]],
     "PARA_INST": [["PARA", "LPAREN", "ATRIB_INST", "EXPRESSAO", "PONTOVIRG", "ATRIB_INST", "RPAREN", "BLOCO"]],
 
-    # ======= EXPRESSÕES =======
+    # ===== Expressões =====
     "EXPRESSAO": [["EXP_LOG"]],
     "EXP_LOG": [["EXP_COMPARACAO", "EXP_LOG_OPC"]],
     "EXP_LOG_OPC": [["OPER_LOGI", "EXP_COMPARACAO", "EXP_LOG_OPC"], ["ε"]],
@@ -47,7 +48,7 @@ grammar = {
     "EXP_ARIT": [["TERMO", "EXP_ARIT_OPC"]],
     "EXP_ARIT_OPC": [["OPER_ARIT", "TERMO", "EXP_ARIT_OPC"], ["ε"]],
 
-    # ======= TERMOS =======
+    # ===== Termos =====
     "TERMO": [
         ["IDENT", "TERMO_CHAMADA_OPC"],
         ["NUMERO_INT"],
@@ -62,11 +63,13 @@ grammar = {
     "PARAMS_CONT": [["VIRGULA", "EXPRESSAO", "PARAMS_CONT"], ["ε"]],
 }
 
-# ======= FIRST =======
+# ===== Função FIRST =====
 def first(simbolo, gramatica, visitados=None):
+    """Calcula o conjunto FIRST de um símbolo da gramática"""
     if visitados is None:
         visitados = set()
 
+    # Conjunto de símbolos terminais
     terminais = {
         "FUNCAO", "PRINCIPAL", "TIPO_VAR", "SE", "SENAO", "ENQUANTO", "FACA", "PARA",
         "RETORNO", "BOOLEANO", "NUMERO_INT", "NUMERO_REAL", "CARACTERE", "CADEIA_LITERAL",
@@ -77,13 +80,14 @@ def first(simbolo, gramatica, visitados=None):
     if simbolo in terminais or simbolo not in gramatica:
         return {simbolo}
 
-    # Evita recursão infinita em ciclos diretos
+    # Evita recursão infinita
     if simbolo in visitados:
         return set()
 
     visitados.add(simbolo)
     conj = set()
 
+    # Para cada produção do símbolo
     for producao in gramatica[simbolo]:
         vazio = True
         for s in producao:
@@ -96,11 +100,12 @@ def first(simbolo, gramatica, visitados=None):
             conj.add("ε")
     return conj
 
-
+# ===== Função FOLLOW =====
 def follow(simbolo, gramatica, inicio="PROGRAMA"):
+    """Calcula o conjunto FOLLOW de um símbolo da gramática"""
     segundo = set()
     if simbolo == inicio:
-        segundo.add("EOF")
+        segundo.add("EOF")  # EOF é adicionado ao follow do símbolo inicial
 
     for cabeca, producoes in gramatica.items():
         for producao in producoes:

@@ -1,5 +1,7 @@
 # scanner.py
 import re
+
+# ===== Definição dos lexemas =====
 lexemas = [
     ("PRINCIPAL",   r'principal'),
     ("FUNCAO",      r'funcao'),
@@ -26,18 +28,21 @@ lexemas = [
     ("RCHAVE",      r'\}'),
     ("VIRGULA",     r','),
     ("PONTOVIRG",   r';'),
-    ("IGNORAR",     r'[ \t\n]+'),
-    ("INCOMPAT",    r'.'),
+    ("IGNORAR",     r'[ \t\n]+'),  # Espaços em branco são ignorados
+    ("INCOMPAT",    r'.'),          # Qualquer outro caractere inválido
 ]
 
 def analisador_lexico(codigo_fonte):
+    """Analisa o código fonte e retorna uma lista de tokens"""
     cadeiaTokens = []
 
+    # Monta a regex combinando todos os lexemas
     expressaoRegular = ""
     for Tokennome , expressao in lexemas:
-        expressaoRegular += f"(?P<{Tokennome }>{expressao})|"
-    expressaoRegular = expressaoRegular[:-1]
+        expressaoRegular += f"(?P<{Tokennome}>{expressao})|"
+    expressaoRegular = expressaoRegular[:-1]  # remove o último '|'
 
+    # Encontra todas as correspondências no código fonte
     correspondencias = re.finditer(expressaoRegular, codigo_fonte)
 
     for correspondencia in correspondencias:
@@ -45,13 +50,4 @@ def analisador_lexico(codigo_fonte):
         vtoken = correspondencia.group()
 
         if tipo_token == "IGNORAR":
-            continue
-
-        elif tipo_token == "INCOMPAT":
-            raise RuntimeError(f"Caractere inesperado encontrado: {vtoken}")
-
-        cadeiaTokens.append((tipo_token, vtoken))
-
-    cadeiaTokens.append(("EOF", None))
-
-    return cadeiaTokens
+            continue  # Ignora
