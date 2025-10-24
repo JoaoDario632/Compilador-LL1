@@ -1,34 +1,41 @@
+#ll1_parser.py
 from grammar import grammar, first, follow
 class AnalisadorSintaticoLL1:
     def __init__(self, gramatica):
         self.gramatica = gramatica
         self.analiseTabela = self.construir_tabela_ll1()  
     def construir_tabela_ll1(self):
-        tabela = {}
+     tabela = {}
 
-        for cabeca, producoes in self.gramatica.items():
-            for producao in producoes:
-             
-                conjPrimeiro = set()
-                encontrou_vazio = True
+     for cabeca, producoes in self.gramatica.items():
+        for producao in producoes:
+            conjPrimeiro = set()
+            encontrou_vazio = True
 
-                for simbolo in producao:
-                    primeiros = first(simbolo, self.gramatica)
-                    conjPrimeiro |= (primeiros - {"ε"})
-                    if "ε" not in primeiros:
-                        encontrou_vazio = False
-                        break
-                if encontrou_vazio:
-                    conjPrimeiro.add("ε")
+            for simbolo in producao:
+                primeiros = first(simbolo, self.gramatica)
+                conjPrimeiro |= (primeiros - {"ε"})
+                if "ε" not in primeiros:
+                    encontrou_vazio = False
+                    break
+            if encontrou_vazio:
+                conjPrimeiro.add("ε")
 
-                # adiciona as regras à tabela LL(1)
-                for simbolo in conjPrimeiro - {"ε"}:
-                    tabela[(cabeca, simbolo)] = producao
-                if "ε" in conjPrimeiro:
-                    for simbolo in follow(cabeca, self.gramatica):
-                        tabela[(cabeca, simbolo)] = producao
+            for simbolo in conjPrimeiro - {"ε"}:
+                chave = (cabeca, simbolo)
+                if chave in tabela:
+                    print(f"[⚠️ Aviso] Conflito LL(1): {cabeca} com {simbolo}")
+                tabela[chave] = producao
 
-        return tabela
+            if "ε" in conjPrimeiro:
+                for simbolo in follow(cabeca, self.gramatica):
+                    chave = (cabeca, simbolo)
+                    if chave in tabela:
+                        print(f"[⚠️ Aviso] Conflito LL(1): {cabeca} com {simbolo}")
+                    tabela[chave] = producao
+
+     return tabela
+
 
     # === ANÁLISE SINTÁTICA ===
     def analisar(self, tokens):

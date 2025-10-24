@@ -11,6 +11,9 @@ if __name__ == "__main__":
     for t in tokens:
         print(t)
 
+    print("\n=== TESTE FIRST(PROGRAMA) ===")
+    print("FIRST(PROGRAMA):", first("PROGRAMA", grammar))
+
     print("\n=== ANÁLISE SINTÁTICA ===")
     parser = AnalisadorSintaticoLL1(grammar)
     parser.analisar(tokens)

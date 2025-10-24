@@ -1,3 +1,4 @@
+# scanner.py
 import re
 lexemas = [
     ("PRINCIPAL",   r'principal'),

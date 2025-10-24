@@ -1,5 +1,4 @@
-# grammar.py
-
+#grammar.py
 grammar = {
     # ======= PROGRAMA =======
     "PROGRAMA": [["DECL_FUNCOES", "FUNCAO_PRINCIPAL"]],
@@ -78,26 +77,26 @@ def first(simbolo, gramatica, visitados=None):
     if simbolo in terminais or simbolo not in gramatica:
         return {simbolo}
 
+    # Evita recursão infinita em ciclos diretos
     if simbolo in visitados:
         return set()
 
     visitados.add(simbolo)
-    conjPrimeiro = set()
+    conj = set()
 
     for producao in gramatica[simbolo]:
-        encontrou_vazio = True
-        for atual in producao:
-            primeiros_atual = first(atual, gramatica, visitados.copy())
-            conjPrimeiro |= (primeiros_atual - {"ε"})
-            if "ε" not in primeiros_atual:
-                encontrou_vazio = False
+        vazio = True
+        for s in producao:
+            primeiros = first(s, gramatica, visitados.copy())
+            conj |= (primeiros - {"ε"})
+            if "ε" not in primeiros:
+                vazio = False
                 break
-        if encontrou_vazio:
-            conjPrimeiro.add("ε")
+        if vazio:
+            conj.add("ε")
+    return conj
 
-    return conjPrimeiro
 
-# ======= FOLLOW =======
 def follow(simbolo, gramatica, inicio="PROGRAMA"):
     segundo = set()
     if simbolo == inicio:
