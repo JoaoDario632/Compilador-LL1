@@ -17,6 +17,7 @@ grammar = {
 
     # ======= COMANDOS =======
     "COMANDO": [
+        ["DECLARACAO"],
         ["SE_INST"],
         ["ENQUANTO_INST"],
         ["PARA_INST"],
