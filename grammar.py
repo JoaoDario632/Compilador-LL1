@@ -3,26 +3,25 @@ grammar = {
     # ======= PROGRAMA =======
     "PROGRAMA": [["DECL_FUNCOES", "FUNCAO_PRINCIPAL"]],
 
-    # Declarações de funções
+    # ======= FUNÇÕES =======
     "DECL_FUNCOES": [["FUNCAO_DEF", "DECL_FUNCOES"], ["ε"]],
     "FUNCAO_DEF": [["FUNCAO", "TIPO_VAR", "IDENT", "LPAREN", "PARAMS_OPC", "RPAREN", "BLOCO"]],
-
-    # Função principal
     "FUNCAO_PRINCIPAL": [["PRINCIPAL", "BLOCO"]],
 
-    # ======= BLOCOS =======
-    "BLOCO": [["LCHAVE", "DECLS_OPC", "COMANDOS", "RCHAVE"]],
-    "COMANDOS": [["COMANDO", "COMANDOS"], ["ε"]],
+  # ======= BLOCOS =======
+"BLOCO": [["LCHAVE", "DECLS_OPC", "COMANDOS", "RCHAVE"]],
+"DECLS_OPC": [["DECLARACAO", "DECLS_OPC"], ["ε"]],
+"COMANDOS": [["COMANDO", "COMANDOS"], ["ε"]],
 
-    # ======= COMANDOS =======
-    "COMANDO": [
-        ["DECLARACAO"],
-        ["SE_INST"],
-        ["ENQUANTO_INST"],
-        ["PARA_INST"],
-        ["RETORNO_INST"],
-        ["ATRIB_INST"]
-    ],
+# ======= COMANDOS =======
+"COMANDO": [
+    ["SE_INST"],
+    ["ENQUANTO_INST"],
+    ["PARA_INST"],
+    ["RETORNO_INST"],
+    ["ATRIB_INST"]
+],
+
 
     # ======= DECLARAÇÕES =======
     "DECLARACAO": [["TIPO_VAR", "IDENT", "DECL_INICIAL_OPC", "PONTOVIRG"]],
@@ -38,16 +37,22 @@ grammar = {
     "ENQUANTO_INST": [["ENQUANTO", "LPAREN", "EXPRESSAO", "RPAREN", "BLOCO"]],
     "PARA_INST": [["PARA", "LPAREN", "ATRIB_INST", "EXPRESSAO", "PONTOVIRG", "ATRIB_INST", "RPAREN", "BLOCO"]],
 
-    # ======= EXPRESSÕES =======
+    # ======= EXPRESSÕES (corrigidas para evitar ambiguidade) =======
     "EXPRESSAO": [["EXP_LOG"]],
-    "EXP_LOG": [["EXP_COMPARACAO", "EXP_LOG_OPC"]],
-    "EXP_LOG_OPC": [["OPER_LOGI", "EXP_COMPARACAO", "EXP_LOG_OPC"], ["ε"]], #Ambiguidade (esquerda -> Direita)
-    "EXP_COMPARACAO": [["EXP_ARIT", "EXP_COMPARACAO_OPC"]],
-    "EXP_COMPARACAO_OPC": [["COMPAR", "EXP_ARIT", "EXP_COMPARACAO_OPC"], ["ε"]], #Ambiguidade
-    "EXP_ARIT": [["TERMO", "EXP_ARIT_OPC"]],
-    "EXP_ARIT_OPC": [["OPER_ARIT", "TERMO", "EXP_ARIT_OPC"], ["ε"]], #Ambiguidade
 
-    # ======= TERMOS =======
+    # Expressões lógicas
+    "EXP_LOG": [["EXP_COMPARACAO", "EXP_LOG'"]],
+    "EXP_LOG'": [["OPER_LOGI", "EXP_COMPARACAO", "EXP_LOG'"], ["ε"]],
+
+    # Expressões de comparação
+    "EXP_COMPARACAO": [["EXP_ARIT", "EXP_COMPARACAO'"]],
+    "EXP_COMPARACAO'": [["COMPAR", "EXP_ARIT", "EXP_COMPARACAO'"], ["ε"]],
+
+    # Expressões aritméticas
+    "EXP_ARIT": [["TERMO", "EXP_ARIT'"]],
+    "EXP_ARIT'": [["OPER_ARIT", "TERMO", "EXP_ARIT'"], ["ε"]],
+
+    # Termos
     "TERMO": [
         ["IDENT", "TERMO_CHAMADA_OPC"],
         ["NUMERO_INT"],
@@ -77,7 +82,6 @@ def first(simbolo, gramatica, visitados=None):
     if simbolo in terminais or simbolo not in gramatica:
         return {simbolo}
 
-    # Evita recursão infinita em ciclos diretos
     if simbolo in visitados:
         return set()
 
@@ -97,6 +101,7 @@ def first(simbolo, gramatica, visitados=None):
     return conj
 
 
+# ======= FOLLOW =======
 def follow(simbolo, gramatica, inicio="PROGRAMA"):
     segundo = set()
     if simbolo == inicio:
