@@ -27,7 +27,7 @@ grammar = {
     ],
 
     "FACA_INST": [["FACA", "BLOCO", "ENQUANTO", "LPAREN", "EXPRESSAO", "RPAREN", "PONTOVIRG"]],
-    "ESCREVER_INST": [["IDENT", "LPAREN", "LISTA_ARGS", "RPAREN", "PONTOVIRG"]],
+    "ESCREVER_INST": [["ESCREVER", "LPAREN", "LISTA_ARGS", "RPAREN", "PONTOVIRG"]],
     "LISTA_ARGS": [["EXPRESSAO", "LISTA_ARGS'"]],
     "LISTA_ARGS'": [["VIRGULA", "EXPRESSAO", "LISTA_ARGS'"], ["ε"]],
 
@@ -57,14 +57,16 @@ grammar = {
     "EXP_ARIT'": [["OPER_ARIT", "TERMO", "EXP_ARIT'"], ["ε"]],
 
     # ======= TERMOS E PARÂMETROS =======
-    "TERMO": [
-        ["IDENT", "TERMO_CHAMADA_OPC"],
-        ["NUMERO_INT"],
-        ["NUMERO_REAL"],
-        ["CADEIA_LITERAL"],
-        ["BOOLEANO"],
-        ["LPAREN", "EXPRESSAO", "RPAREN"]
-    ],
+  "TERMO": [
+    ["IDENT", "TERMO_CHAMADA_OPC"],
+    ["NUMERO_INT"],
+    ["NUMERO_REAL"],
+    ["CADEIA_LITERAL"],
+    ["PALAVRA"],       
+    ["BOOLEANO"],
+    ["LPAREN", "EXPRESSAO", "RPAREN"]
+],
+
     "TERMO_CHAMADA_OPC": [["LPAREN", "PARAMS_OPC", "RPAREN"], ["ε"]],
     "PARAMS_OPC": [["PARAMS"], ["ε"]],
     "PARAMS": [["EXPRESSAO", "PARAMS_CONT"]],

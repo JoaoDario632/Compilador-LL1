@@ -15,6 +15,7 @@ lexemas = [
     ("NUMERO_INT",  r'\d+'),
     ("CARACTERE",   r'\'.\''),
     ("PALAVRA",     r'"(?:\\.|[^"\\])*"'),
+    ("ESCREVER",    r'escrever'),   
     ("IDENT",       r'[a-zA-Z_]\w*'),
     ("COMPAR",      r'[<>]=?|==|!='),
     ("OPER_ARIT",   r'[+\-*/%]'),
@@ -29,6 +30,7 @@ lexemas = [
     ("IGNORAR",     r'[ \t\n]+'),
     ("INCOMPAT",    r'.'),
 ]
+
 
 def analisador_lexico(codigo_fonte):
     cadeiaTokens = []
