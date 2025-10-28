@@ -1,6 +1,3 @@
-# ========================= grammar.py =========================
-# Define a gramática LL(1), e as funções para calcular os conjuntos FIRST e FOLLOW.
-
 grammar = {
     # ======= PROGRAMA =======
     "PROGRAMA": [["DECL_FUNCOES", "FUNCAO_PRINCIPAL"]],
@@ -11,18 +8,28 @@ grammar = {
     "FUNCAO_PRINCIPAL": [["PRINCIPAL", "BLOCO"]],
 
     # ======= BLOCOS =======
-    "BLOCO": [["LCHAVE", "DECLS_OPC", "COMANDOS", "RCHAVE"]],
-    "DECLS_OPC": [["DECLARACAO", "DECLS_OPC"], ["ε"]],
-    "COMANDOS": [["COMANDO", "COMANDOS"], ["ε"]],
+    "BLOCO": [["LCHAVE", "DECLS_COMANDOS", "RCHAVE"]],
+    "DECLS_COMANDOS": [
+        ["DECLARACAO", "DECLS_COMANDOS"],
+        ["COMANDO", "DECLS_COMANDOS"],
+        ["ε"]
+    ],
 
     # ======= COMANDOS =======
     "COMANDO": [
         ["SE_INST"],
         ["ENQUANTO_INST"],
+        ["FACA_INST"],
         ["PARA_INST"],
         ["RETORNO_INST"],
-        ["ATRIB_INST"]
+        ["ATRIB_INST"],
+        ["ESCREVER_INST"]
     ],
+
+    "FACA_INST": [["FACA", "BLOCO", "ENQUANTO", "LPAREN", "EXPRESSAO", "RPAREN", "PONTOVIRG"]],
+    "ESCREVER_INST": [["IDENT", "LPAREN", "LISTA_ARGS", "RPAREN", "PONTOVIRG"]],
+    "LISTA_ARGS": [["EXPRESSAO", "LISTA_ARGS'"]],
+    "LISTA_ARGS'": [["VIRGULA", "EXPRESSAO", "LISTA_ARGS'"], ["ε"]],
 
     # ======= DECLARAÇÕES =======
     "DECLARACAO": [["TIPO_VAR", "IDENT", "DECL_INICIAL_OPC", "PONTOVIRG"]],
@@ -97,25 +104,19 @@ def first(simbolo, gramatica, visitados=None):
     for producao in gramatica[simbolo]:
         vazio = True
         for s in producao:
-            primeiros = first(s, gramatica, visitados.copy())  # Calcula FIRST(s)
-            conj |= (primeiros - {"ε"})                        # Adiciona todos exceto ε
-            if "ε" not in primeiros:                           # Se não produz ε, interrompe
+            primeiros = first(s, gramatica, visitados.copy())  
+            conj |= (primeiros - {"ε"})                      
+            if "ε" not in primeiros:                         
                 vazio = False
                 break
         if vazio:
-            conj.add("ε")                                      # Se todas produzem ε, adiciona ε
+            conj.add("ε")                                     
     return conj
 
 
 # ======= FOLLOW =======
 def follow(simbolo, gramatica, inicio="PROGRAMA"):
-    """
-    Calcula o conjunto FOLLOW de um símbolo não-terminal.
-    FOLLOW(A) = conjunto de tokens que podem aparecer imediatamente após A.
-    """
     segundo = set()
-
-    # Símbolo inicial sempre contém EOF no FOLLOW
     if simbolo == inicio:
         segundo.add("EOF")
 
