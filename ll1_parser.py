@@ -58,7 +58,6 @@ class AnalisadorSintaticoLL1:
                     print(f"[ERRO] Esperado um de {esperados}, mas encontrado '{ttoken}'.")
                     print("→ Recuperando em modo pânico...")
 
-                    # 🔁 Recuperação em modo pânico
                     follow_topo = follow(topo, self.gramatica)
                     while ttoken not in follow_topo and ttoken != "eof":
                         posicao += 1

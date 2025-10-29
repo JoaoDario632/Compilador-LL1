@@ -36,8 +36,8 @@ def analisador_lexico(codigo_fonte):
     cadeiaTokens = []
 
     expressaoRegular = ""
-    for Tokennome , expressao in lexemas:
-        expressaoRegular += f"(?P<{Tokennome }>{expressao})|"
+    for Tokennome, expressao in lexemas:
+        expressaoRegular += f"(?P<{Tokennome}>{expressao})|"
     expressaoRegular = expressaoRegular[:-1]
 
     correspondencias = re.finditer(expressaoRegular, codigo_fonte)
@@ -48,12 +48,10 @@ def analisador_lexico(codigo_fonte):
 
         if tipo_token == "IGNORAR":
             continue
-
         elif tipo_token == "INCOMPAT":
             raise RuntimeError(f"Caractere inesperado encontrado: {vtoken}")
+        cadeiaTokens.append((tipo_token.lower(), vtoken))
 
-        cadeiaTokens.append((tipo_token, vtoken))
-
-    cadeiaTokens.append(("EOF", None))
+    cadeiaTokens.append(("eof", None)) 
 
     return cadeiaTokens
