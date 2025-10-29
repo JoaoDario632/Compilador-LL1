@@ -1,6 +1,8 @@
+"""
+#ll1_parser.py
 # Implementa o analisador sintático preditivo LL(1)
 # usando tabela de análise gerada a partir de FIRST e FOLLOW.
-
+"""
 from grammar import grammar, first, follow
 
 class AnalisadorSintaticoLL1:
