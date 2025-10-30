@@ -19,4 +19,4 @@ if __name__ == "__main__":
     # === ANÁLISE SINTÁTICA ===
     print("\n=== ANÁLISE SINTÁTICA ===")
     parser = AnalisadorSintaticoLL1(grammar)  
-    parser.analisar(tokens)                  
+    parser.analisar(tokens)        
