@@ -54,6 +54,11 @@ TERMO ::= IDENT | NUMERO_INT | NUMERO_REAL | PALAVRA | BOOLEANO | (EXPRESSAO) | 
 - Certifique-se de ter Python 3 instalado.
 - Execute o main.py:
 
+## Dependências Usadas
+
+Este projeto uso da biblioteca tabulete, a qual realiza a formatação de dados tabulares, para que eles possa ser exibidos de forma legível
+> Para instalar a depedencia, rode o comando:
+  pip install tabulate
 # 👨‍💻 Autores
 <table>
   <tr>
