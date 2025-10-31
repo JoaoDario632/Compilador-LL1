@@ -50,11 +50,8 @@ def analisador_lexico(codigo_fonte):
             continue
         elif tipo_token == "INCOMPAT":
             raise RuntimeError(f"Caractere inesperado encontrado: {vtoken}")
+        cadeiaTokens.append((tipo_token, vtoken))
 
-        if tipo_token == "TIPO_VAR":
-            cadeiaTokens.append((vtoken, vtoken)) 
-        else:
-            cadeiaTokens.append((tipo_token.lower(), vtoken))
+    cadeiaTokens.append(("eof", None)) 
 
-    cadeiaTokens.append(("eof", None))
     return cadeiaTokens

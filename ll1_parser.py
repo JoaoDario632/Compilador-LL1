@@ -37,8 +37,6 @@ class AnalisadorSintaticoLL1:
         posicao = 0
         ttoken = tokens[posicao][0]
 
-        print("\n=== ANÁLISE SINTÁTICA ===")
-
         while pilha:
             topo = pilha.pop()
 
@@ -76,7 +74,6 @@ class AnalisadorSintaticoLL1:
 
             else:
                 print(f"[ERRO] Token inesperado '{ttoken}', esperado '{topo}'.")
-                print("→ Ignorando token e tentando sincronizar...")
                 posicao += 1
                 if posicao < len(tokens):
                     ttoken = tokens[posicao][0]
