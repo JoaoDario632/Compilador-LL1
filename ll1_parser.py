@@ -1,3 +1,4 @@
+# ll1_parse.py
 from grammar import grammar, first, follow
 
 class AnalisadorSintaticoLL1:
@@ -33,7 +34,7 @@ class AnalisadorSintaticoLL1:
         return tabela
 
     def analisar(self, tokens):
-        pilha = ["eof", "PROGRAMA"]
+        pilha = ["EOF", "PROGRAMA"]
         posicao = 0
         ttoken = tokens[posicao][0]
 
@@ -57,7 +58,7 @@ class AnalisadorSintaticoLL1:
                     print("→ Recuperando em modo pânico...")
 
                     follow_topo = follow(topo, self.gramatica)
-                    while ttoken not in follow_topo and ttoken != "eof":
+                    while ttoken not in follow_topo and ttoken != "EOF":
                         posicao += 1
                         if posicao < len(tokens):
                             ttoken = tokens[posicao][0]
@@ -80,4 +81,4 @@ class AnalisadorSintaticoLL1:
                 else:
                     break
 
-        print("\n Análise sintática concluída (modo pânico ativo).")
+        print("\nAnálise sintática concluída (modo pânico ativo).")
