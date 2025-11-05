@@ -1,32 +1,52 @@
 # grammar.py
-# Gramática para a linguagem exemplo do seu projeto
-# Símbolo de epsilon: "ε"
+# -------------------------
+# Gramática da linguagem exemplo do projeto
+# -------------------------
+# Este arquivo define:
+# 1. A gramática da linguagem (em forma de dicionário Python)
+# 2. Funções auxiliares para calcular os conjuntos FIRST e FOLLOW
+#
+# Símbolo de epsilon (produção vazia): "ε"
 
 from collections import defaultdict, deque
 
-# -------------------------
-# GRAMÁTICA (produções)
-# -------------------------
-# Cada cabeça mapeia para uma lista de produções; cada produção é lista de símbolos (strings)
+# ===============================================================
+#                   DEFINIÇÃO DA GRAMÁTICA
+# ===============================================================
+# Cada não-terminal (como "PROGRAMA", "BLOCO", etc.)
+# mapeia para uma lista de produções.
+# Cada produção é uma lista de símbolos (terminais ou não-terminais).
+# Exemplo:
+#   "PROGRAMA": [["DECL_FUNCOES", "PRINCIPAL"]]
+# significa que PROGRAMA → DECL_FUNCOES PRINCIPAL
+
 grammar = {
     "PROGRAMA": [["DECL_FUNCOES", "PRINCIPAL"]],
 
     # Declaração de funções (opcional) e principal
-    "DECL_FUNCOES": [["FUNCAO", "TIPO_VAR", "IDENT", "LPAREN", "PARAMS", "RPAREN", "BLOCO", "DECL_FUNCOES"],
-                     ["ε"]],
+    # Pode haver uma ou mais funções seguidas de 'PRINCIPAL',
+    # ou pode ser vazio (ε).
+    "DECL_FUNCOES": [
+        ["FUNCAO", "TIPO_VAR", "IDENT", "LPAREN", "PARAMS", "RPAREN", "BLOCO", "DECL_FUNCOES"],
+        ["ε"]
+    ],
 
+    # Lista de parâmetros de função
     "PARAMS": [["PARAM", "VIRGULA", "PARAMS"], ["PARAM"], ["ε"]],
     "PARAM": [["TIPO_VAR", "IDENT"]],
 
+    # Definição do bloco principal
     "PRINCIPAL": [["PRINCIPAL", "BLOCO"]],
 
-    # Blocos com declarações e comandos
+    # Estrutura de bloco: { DECLARACOES COMANDOS }
     "BLOCO": [["LCHAVE", "DECLARACOES", "COMANDOS", "RCHAVE"]],
 
+    # Declarações de variáveis
     "DECLARACOES": [["DECLARACAO", "DECLARACOES"], ["ε"]],
     "DECLARACAO": [["TIPO_VAR", "IDENT", "DECLARACAO_OPC", "PONTOVIRG"]],
     "DECLARACAO_OPC": [["ATRIB", "EXPRESSAO"], ["ε"]],
 
+    # Conjunto de comandos
     "COMANDOS": [["COMANDO", "COMANDOS"], ["ε"]],
     "COMANDO": [
         ["ATRIBUICAO"],
@@ -46,27 +66,39 @@ grammar = {
     "CHAMADA_FUNCAO": [["IDENT", "LPAREN", "ARGUMENTOS", "RPAREN", "PONTOVIRG"]],
     "ARGUMENTOS": [["EXPRESSAO", "VIRGULA", "ARGUMENTOS"], ["EXPRESSAO"], ["ε"]],
 
-    # if / else
+    # Estrutura condicional if / else
     "SE_STAT": [["SE", "LPAREN", "EXPRESSAO", "RPAREN", "BLOCO", "SENAO_OPT"]],
     "SENAO_OPT": [["SENAO", "BLOCO"], ["ε"]],
 
-    # while
+    # Estrutura de repetição while
     "ENQUANTO_STAT": [["ENQUANTO", "LPAREN", "EXPRESSAO", "RPAREN", "BLOCO"]],
 
-    # do { } while (expr);
+    # Estrutura do-while: faca { } enquanto(expr);
     "FACA_STAT": [["FACA", "BLOCO"]],
 
-    # for: para ( TIPO_VAR IDENT = NUMERO ; IDENT COMPAR NUMERO ; IDENT ATRIB IDENT OPER_ARIT NUMERO ) BLOCO
-    # Simplificamos para: PARA ( DECLARACAO_SIMPLES PONTOVIRG EXPRESSAO PONTOVIRG ATRIBUICAO_SIMPLES ) BLOCO
-    "PARA_STAT": [["PARA", "LPAREN", "DECLARACAO_PARA", "PONTOVIRG", "EXPRESSAO", "PONTOVIRG", "ATRIBUICAO", "RPAREN", "BLOCO"]],
+    # Estrutura for
+    # Simplificada: PARA ( DECLARACAO_PARA ; EXPRESSAO ; ATRIBUICAO ) BLOCO
+    "PARA_STAT": [[
+        "PARA", "LPAREN", "DECLARACAO_PARA", "PONTOVIRG", "EXPRESSAO",
+        "PONTOVIRG", "ATRIBUICAO", "RPAREN", "BLOCO"
+    ]],
     "DECLARACAO_PARA": [["TIPO_VAR", "IDENT", "ATRIB", "EXPRESSAO"], ["IDENT", "ATRIB", "EXPRESSAO"]],
 
+    # Comando de saída
     "ESCREVER_STAT": [["ESCREVER", "LPAREN", "ARGUMENTOS", "RPAREN", "PONTOVIRG"]],
+
+    # Retorno de função
     "RETORNO_STAT": [["RETORNO", "EXPRESSAO", "PONTOVIRG"]],
 
-    # Expressões aritméticas/booleanas (simples)
+    # Expressões aritméticas e booleanas
     "EXPRESSAO": [["TERMO", "EXPRESSAO_PRIME"]],
-    "EXPRESSAO_PRIME": [["OPER_ARIT", "TERMO", "EXPRESSAO_PRIME"], ["OPER_LOGI", "TERMO", "EXPRESSAO_PRIME"], ["ε"]],
+    "EXPRESSAO_PRIME": [
+        ["OPER_ARIT", "TERMO", "EXPRESSAO_PRIME"],
+        ["OPER_LOGI", "TERMO", "EXPRESSAO_PRIME"],
+        ["ε"]
+    ],
+
+    # Termos de expressão (valores ou subexpressões)
     "TERMO": [
         ["IDENT"],
         ["NUMERO_INT"],
@@ -76,53 +108,63 @@ grammar = {
         ["LPAREN", "EXPRESSAO", "RPAREN"]
     ],
 
-    # Função (declaração)
-    "FUNCAO": [["FUNCAO"]],  # token 'funcao' já é reconhecido como FUNCAO pelo scanner; a produção real vem em DECL_FUNCOES
-
-    # Tokens terminais (na prática, aparecem como terminais nas regras acima)
-    # Não precisamos listá-los aqui — eles são aqueles que não aparecem como chaves de grammar.
+    # Declaração de função (token já reconhecido pelo léxico)
+    "FUNCAO": [["FUNCAO"]],
 }
 
-# -------------------------
-# UTILITÁRIAS: FIRST e FOLLOW
-# -------------------------
+# Símbolo especial epsilon
 EPS = "ε"
 
+# ===============================================================
+#                   FUNÇÕES AUXILIARES
+# ===============================================================
+
 def is_nonterminal(sym):
+    """
+    Retorna True se o símbolo for um não-terminal (aparece nas chaves da gramática).
+    Caso contrário, retorna False.
+    """
     return sym in grammar
 
+
+# ===============================================================
+#               CÁLCULO DO CONJUNTO FIRST
+# ===============================================================
 def first(X, G):
     """
-    Retorna conjunto FIRST(X).
-    Se X for terminal, retorna {X}.
-    Se X for não-terminal, computa usando algoritmo fixpoint.
+    Retorna o conjunto FIRST(X):
+      - Se X é terminal, FIRST(X) = {X}
+      - Se X é não-terminal, FIRST(X) é calculado por fixpoint
+        considerando todas as produções de X.
+
+    O conjunto FIRST contém todos os símbolos terminais
+    que podem iniciar uma sentença derivada de X.
     """
-    # Se for terminal (não está nas chaves), FIRST(X) = {X}
+    # Caso base: X é terminal
     if X not in G:
-        # Para o caso especial de epsilon solicitado diretamente
         if X == EPS:
             return {EPS}
         return {X}
 
-    # Computa FIRST para todos não-terminais (fixpoint)
+    # Inicializa dicionário FIRST para todos os não-terminais
     FIRST = {nt: set() for nt in G}
-    changed = True
+    changed = True  # flag para detectar mudanças
 
+    # Laço até estabilizar (não há mais mudanças nos conjuntos)
     while changed:
         changed = False
-        for A, prods in G.items():
+        for A, prods in G.items():  # percorre cada não-terminal e suas produções
             for prod in prods:
-                # prod é uma lista de símbolos
+                # Produção vazia → adiciona ε
                 if prod == [EPS] or prod == "ε" or prod == []:
-                    # Tratamos produção vazia
                     if EPS not in FIRST[A]:
                         FIRST[A].add(EPS)
                         changed = True
                     continue
 
-                add_eps = True
+                add_eps = True  # indica se ε pode propagar
                 for symbol in prod:
-                    # obter FIRST(symbol)
+                    # Caso o símbolo seja ε
                     if symbol == EPS:
                         if EPS not in FIRST[A]:
                             FIRST[A].add(EPS)
@@ -130,28 +172,30 @@ def first(X, G):
                         add_eps = False
                         break
 
+                    # Caso o símbolo seja terminal
                     if symbol not in G:
-                        # symbol é terminal
                         if symbol not in FIRST[A]:
                             FIRST[A].add(symbol)
                             changed = True
                         add_eps = False
                         break
+
+                    # Caso o símbolo seja não-terminal
                     else:
-                        # symbol é não-terminal
-                        # adiciona FIRST(symbol) - {ε}
+                        # Adiciona FIRST(symbol) - {ε}
                         before = len(FIRST[A])
                         FIRST[A].update(x for x in FIRST[symbol] if x != EPS)
                         if len(FIRST[A]) != before:
                             changed = True
 
+                        # Se FIRST(symbol) contém ε, continua para o próximo símbolo
                         if EPS in FIRST[symbol]:
                             add_eps = True
-                            # continua para o próximo símbolo
                         else:
                             add_eps = False
                             break
 
+                # Se todos os símbolos da produção podem gerar ε, adiciona ε
                 if add_eps:
                     if EPS not in FIRST[A]:
                         FIRST[A].add(EPS)
@@ -159,13 +203,21 @@ def first(X, G):
 
     return FIRST[X]
 
+
+# ===============================================================
+#               CÁLCULO DO CONJUNTO FOLLOW
+# ===============================================================
 def follow(A, G):
     """
-    Retorna conjunto FOLLOW(A). Assume G como grammar global.
+    Retorna o conjunto FOLLOW(A):
+      - FIRST de símbolos à direita de A nas produções
+      - FOLLOW do não-terminal à esquerda se A for o último
+      - O símbolo inicial sempre contém EOF
     """
-    # Inicializa FOLLOW para todos não-terminais
+    # Inicializa FOLLOW vazio para todos os não-terminais
     FOLLOW = {nt: set() for nt in G}
-    # Símbolo inicial recebe EOF no follow
+
+    # O primeiro símbolo da gramática recebe 'EOF'
     start = list(G.keys())[0]
     FOLLOW[start].add("EOF")
 
@@ -174,40 +226,48 @@ def follow(A, G):
         changed = False
         for head, prods in G.items():
             for prod in prods:
-                # percorre cada símbolo na produção
+                # ignora produções vazias
                 if prod == [EPS] or prod == "ε":
                     continue
+                # percorre símbolos da produção
                 for i, B in enumerate(prod):
+                    # ignora terminais
                     if B not in G:
                         continue
-                    # beta = prod[i+1:]
-                    beta = prod[i+1:]
+
+                    beta = prod[i + 1:]  # parte da produção após B
+
+                    # Caso 1: B é o último símbolo → adiciona FOLLOW(head)
                     if not beta:
-                        # se B é o último símbolo, FOLLOW(B) inclui FOLLOW(head)
                         before = len(FOLLOW[B])
                         FOLLOW[B].update(FOLLOW[head])
                         if len(FOLLOW[B]) != before:
                             changed = True
                     else:
-                        # FIRST(beta)
+                        # Caso 2: há símbolos depois de B → calcula FIRST(beta)
                         primeiro_beta = set()
                         add_follow_head = True
+
                         for symbol in beta:
+                            # símbolo é ε
                             if symbol == EPS:
                                 primeiro_beta.add(EPS)
                                 continue
+
+                            # símbolo terminal → adiciona e para
                             if symbol not in G:
                                 primeiro_beta.add(symbol)
                                 add_follow_head = False
                                 break
+
+                            # símbolo não-terminal → adiciona FIRST(symbol) - {ε}
+                            primeiro_beta.update(x for x in first(symbol, G) if x != EPS)
+                            if EPS in first(symbol, G):
+                                add_follow_head = True
+                                continue
                             else:
-                                primeiro_beta.update(x for x in first(symbol, G) if x != EPS)
-                                if EPS in first(symbol, G):
-                                    add_follow_head = True
-                                    continue
-                                else:
-                                    add_follow_head = False
-                                    break
+                                add_follow_head = False
+                                break
 
                         # adiciona FIRST(beta) - {ε} a FOLLOW(B)
                         before = len(FOLLOW[B])
@@ -215,6 +275,7 @@ def follow(A, G):
                         if len(FOLLOW[B]) != before:
                             changed = True
 
+                        # Se beta →* ε, adiciona FOLLOW(head) a FOLLOW(B)
                         if add_follow_head or (EPS in primeiro_beta):
                             before = len(FOLLOW[B])
                             FOLLOW[B].update(FOLLOW[head])
@@ -223,5 +284,8 @@ def follow(A, G):
 
     return FOLLOW[A]
 
-# Exporta para os módulos que importam
+
+# ===============================================================
+#           EXPORTAÇÃO DOS ELEMENTOS DO MÓDULO
+# ===============================================================
 __all__ = ["grammar", "first", "follow", "EPS"]
