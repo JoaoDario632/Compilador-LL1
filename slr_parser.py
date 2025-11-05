@@ -10,9 +10,6 @@ def itens_lr0(gramatica):
     novaGramatica = {"S'": [[inicial]]}
     novaGramatica.update(gramatica)
 
-    # ---------------------------
-    # Função interna: fechamento()
-    # ---------------------------
     # Dado um conjunto de itens, adiciona todos os itens que podem ser "alcançados"
     # a partir de não-terminais logo após o ponto.
     def fechamento(itens):
