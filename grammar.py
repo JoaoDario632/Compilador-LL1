@@ -223,37 +223,5 @@ def follow(A, G):
 
     return FOLLOW[A]
 
-def all_firsts(G):
-    EPS = "ε"
-    FIRST = {nt: set() for nt in G}
-    changed = True
-    while changed:
-        changed = False
-        for A, prods in G.items():
-            for prod in prods:
-                if prod == [EPS] or prod == ["ε"] or prod == []:
-                    if EPS not in FIRST[A]:
-                        FIRST[A].add(EPS)
-                        changed = True
-                    continue
-                for symbol in prod:
-                    if symbol not in G:
-                        if symbol not in FIRST[A]:
-                            FIRST[A].add(symbol)
-                            changed = True
-                        break
-                    else:
-                        before = len(FIRST[A])
-                        FIRST[A].update(FIRST[symbol] - {EPS})
-                        if len(FIRST[A]) != before:
-                            changed = True
-                        if EPS not in FIRST[symbol]:
-                            break
-                else:
-                    if EPS not in FIRST[A]:
-                        FIRST[A].add(EPS)
-                        changed = True
-    return FIRST
-
 # Exporta para os módulos que importam
 __all__ = ["grammar", "first", "follow", "EPS"]
