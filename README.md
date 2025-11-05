@@ -10,6 +10,7 @@ Ele permite processar código fonte, identificar tokens e validar a sintaxe de p
 ├── ll1_parser.py # Analisador sintático LL(1)
 ├── grammar.py # Definição da gramática, funções first e follow
 ├── app.br # Exemplo de código da linguagem
+├── slr_parser.py #Analisador Sintático SLR
 └── README.md # Documentação do projeto
 ```
 
