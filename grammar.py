@@ -21,22 +21,17 @@ from collections import defaultdict, deque
 # significa que PROGRAMA → DECL_FUNCOES PRINCIPAL
 
 grammar = {
-    "PROGRAMA": [["DECL_FUNCOES", "PRINCIPAL"]],
+    "PROGRAMA": [["DECL_FUNCOES", "PRINCIPAL_G"]],
 
     # Declaração de funções (opcional) e principal
-    # Pode haver uma ou mais funções seguidas de 'PRINCIPAL',
-    # ou pode ser vazio (ε).
-    "DECL_FUNCOES": [
-        ["FUNCAO", "TIPO_VAR", "IDENT", "LPAREN", "PARAMS", "RPAREN", "BLOCO", "DECL_FUNCOES"],
-        ["ε"]
-    ],
+    "DECL_FUNCOES": [["FUNCAO_G", "TIPO_VAR", "IDENT", "LPAREN", "PARAMS", "RPAREN", "BLOCO", "DECL_FUNCOES"],
+                     ["ε"]],
 
     # Lista de parâmetros de função
     "PARAMS": [["PARAM", "VIRGULA", "PARAMS"], ["PARAM"], ["ε"]],
     "PARAM": [["TIPO_VAR", "IDENT"]],
 
-    # Definição do bloco principal
-    "PRINCIPAL": [["PRINCIPAL", "BLOCO"]],
+    "PRINCIPAL_G": [["PRINCIPAL", "BLOCO"]],
 
     # Estrutura de bloco: { DECLARACOES COMANDOS }
     "BLOCO": [["LCHAVE", "DECLARACOES", "COMANDOS", "RCHAVE"]],
@@ -108,8 +103,11 @@ grammar = {
         ["LPAREN", "EXPRESSAO", "RPAREN"]
     ],
 
-    # Declaração de função (token já reconhecido pelo léxico)
-    "FUNCAO": [["FUNCAO"]],
+    # Função (declaração)
+    "FUNCAO_G": [["FUNCAO"]],  # token 'funcao' já é reconhecido como FUNCAO pelo scanner; a produção real vem em DECL_FUNCOES
+
+    # Tokens terminais (na prática, aparecem como terminais nas regras acima)
+    # Não precisamos listá-los aqui — eles são aqueles que não aparecem como chaves de grammar.
 }
 
 # Símbolo especial epsilon
