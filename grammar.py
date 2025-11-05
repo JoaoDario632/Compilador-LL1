@@ -9,16 +9,16 @@ from collections import defaultdict, deque
 # -------------------------
 # Cada cabeça mapeia para uma lista de produções; cada produção é lista de símbolos (strings)
 grammar = {
-    "PROGRAMA": [["DECL_FUNCOES", "PRINCIPAL"]],
+    "PROGRAMA": [["DECL_FUNCOES", "PRINCIPAL_G"]],
 
     # Declaração de funções (opcional) e principal
-    "DECL_FUNCOES": [["FUNCAO", "TIPO_VAR", "IDENT", "LPAREN", "PARAMS", "RPAREN", "BLOCO", "DECL_FUNCOES"],
+    "DECL_FUNCOES": [["FUNCAO_G", "TIPO_VAR", "IDENT", "LPAREN", "PARAMS", "RPAREN", "BLOCO", "DECL_FUNCOES"],
                      ["ε"]],
 
     "PARAMS": [["PARAM", "VIRGULA", "PARAMS"], ["PARAM"], ["ε"]],
     "PARAM": [["TIPO_VAR", "IDENT"]],
 
-    "PRINCIPAL": [["PRINCIPAL", "BLOCO"]],
+    "PRINCIPAL_G": [["PRINCIPAL", "BLOCO"]],
 
     # Blocos com declarações e comandos
     "BLOCO": [["LCHAVE", "DECLARACOES", "COMANDOS", "RCHAVE"]],
@@ -77,7 +77,7 @@ grammar = {
     ],
 
     # Função (declaração)
-    "FUNCAO": [["FUNCAO"]],  # token 'funcao' já é reconhecido como FUNCAO pelo scanner; a produção real vem em DECL_FUNCOES
+    "FUNCAO_G": [["FUNCAO"]],  # token 'funcao' já é reconhecido como FUNCAO pelo scanner; a produção real vem em DECL_FUNCOES
 
     # Tokens terminais (na prática, aparecem como terminais nas regras acima)
     # Não precisamos listá-los aqui — eles são aqueles que não aparecem como chaves de grammar.
