@@ -94,12 +94,6 @@ def itens_lr0(gramatica):
 
     # Retorna os estados, transições e a gramática aumentada
     return estados, transicoes, novaGramatica
-
-
-
-# ===================================================
-# FUNÇÃO: construir_tabela_slr(gramatica)
-# ===================================================
 # A partir dos itens LR(0), constrói as tabelas ACTION e GOTO usadas no parser SLR(1)
 def construir_tabela_slr(gramatica):
     estados, transicoes, novaGramatica = itens_lr0(gramatica)
@@ -140,9 +134,6 @@ def construir_tabela_slr(gramatica):
 
     # Retorna as tabelas ACTION e GOTO, além dos estados
     return acaoTabela, TableGoTo, estados
-# ===================================================
-# FUNÇÃO: analisar_slr(tokens, gramatica)
-# ===================================================
 # Simula o processo de análise sintática SLR(1) usando as tabelas ACTION e GOTO
 def analisar_slr(tokens, gramatica):
     acaoTabela, TableGoTo, estados = construir_tabela_slr(gramatica)

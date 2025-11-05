@@ -55,7 +55,7 @@ class AnalisadorSintaticoLL1:
                 if not regra:
                     esperados = [k[1] for k in self.analiseTabela if k[0] == topo]
                     print(f"[ERRO] Esperado um de {esperados}, mas encontrado '{ttoken}'.")
-                    print("→ Recuperando em modo pânico...")
+                    print("→ Recuperando em modo pânico.")
 
                     follow_topo = follow(topo, self.gramatica)
                     while ttoken not in follow_topo and ttoken != "EOF":
