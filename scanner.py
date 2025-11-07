@@ -1,8 +1,4 @@
 import re
-
-# ----------------------------------------------------
-# Lista de padrões de tokens com expressões regulares
-# ----------------------------------------------------
 lexemas = [
     ("PRINCIPAL",   r'principal'),
     ("FUNCAO",      r'funcao'),
