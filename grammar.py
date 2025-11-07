@@ -111,77 +111,50 @@ def is_nonterminal(sym):
     return sym in grammar
 
 
-#               CÁLCULO DO CONJUNTO FIRST
 def first(X, G):
-    """
-    Retorna o conjunto FIRST(X):
-      - Se X é terminal, FIRST(X) = {X}
-      - Se X é não-terminal, FIRST(X) é calculado por fixpoint
-        considerando todas as produções de X.
-
-    O conjunto FIRST contém todos os símbolos terminais
-    que podem iniciar uma sentença derivada de X.
-    """
-    # Caso base: X é terminal
     if X not in G:
         if X == EPS:
             return {EPS}
         return {X}
-
-    # Inicializa dicionário FIRST para todos os não-terminais
     FIRST = {nt: set() for nt in G}
-    changed = True  # flag para detectar mudanças
-
-    # Laço até estabilizar (não há mais mudanças nos conjuntos)
-    while changed:
-        changed = False
-        for A, prods in G.items():  # percorre cada não-terminal e suas produções
+    mudanca = True
+    while mudanca:
+        mudanca = False
+        for A, prods in G.items():
             for prod in prods:
-                # Produção vazia → adiciona ε
                 if prod == [EPS] or prod == "ε" or prod == []:
                     if EPS not in FIRST[A]:
                         FIRST[A].add(EPS)
-                        changed = True
+                        mudanca = True
                     continue
-
-                add_eps = True  # indica se ε pode propagar
-                for symbol in prod:
-                    # Caso o símbolo seja ε
-                    if symbol == EPS:
+                inserirEPS = True
+                for simbolo in prod:
+                    if simbolo == EPS:
                         if EPS not in FIRST[A]:
                             FIRST[A].add(EPS)
-                            changed = True
-                        add_eps = False
+                            mudanca = True
+                        inserirEPS = False
                         break
-
-                    # Caso o símbolo seja terminal
-                    if symbol not in G:
-                        if symbol not in FIRST[A]:
-                            FIRST[A].add(symbol)
-                            changed = True
-                        add_eps = False
+                    if simbolo not in G:
+                        if simbolo not in FIRST[A]:
+                            FIRST[A].add(simbolo)
+                            mudanca = True
+                        inserirEPS = False
                         break
-
-                    # Caso o símbolo seja não-terminal
                     else:
-                        # Adiciona FIRST(symbol) - {ε}
                         before = len(FIRST[A])
-                        FIRST[A].update(x for x in FIRST[symbol] if x != EPS)
+                        FIRST[A].update(x for x in FIRST[simbolo] if x != EPS)
                         if len(FIRST[A]) != before:
-                            changed = True
-
-                        # Se FIRST(symbol) contém ε, continua para o próximo símbolo
-                        if EPS in FIRST[symbol]:
-                            add_eps = True
+                            mudanca = True
+                        if EPS in FIRST[simbolo]:
+                            inserirEPS = True
                         else:
-                            add_eps = False
+                            inserirEPS = False
                             break
-
-                # Se todos os símbolos da produção podem gerar ε, adiciona ε
-                if add_eps:
+                if inserirEPS:
                     if EPS not in FIRST[A]:
                         FIRST[A].add(EPS)
-                        changed = True
+                        mudanca = True
 
     return FIRST[X]
 
@@ -201,9 +174,9 @@ def follow(A, G):
     start = list(G.keys())[0]
     FOLLOW[start].add("EOF")
 
-    changed = True
-    while changed:
-        changed = False
+    mudanca = True
+    while mudanca:
+        mudanca = False
         for head, prods in G.items():
             for prod in prods:
                 # ignora produções vazias
@@ -222,27 +195,27 @@ def follow(A, G):
                         before = len(FOLLOW[B])
                         FOLLOW[B].update(FOLLOW[head])
                         if len(FOLLOW[B]) != before:
-                            changed = True
+                            mudanca = True
                     else:
                         # Caso 2: há símbolos depois de B → calcula FIRST(beta)
                         primeiro_beta = set()
                         add_follow_head = True
 
-                        for symbol in beta:
+                        for simbolo in beta:
                             # símbolo é ε
-                            if symbol == EPS:
+                            if simbolo == EPS:
                                 primeiro_beta.add(EPS)
                                 continue
 
                             # símbolo terminal → adiciona e para
-                            if symbol not in G:
-                                primeiro_beta.add(symbol)
+                            if simbolo not in G:
+                                primeiro_beta.add(simbolo)
                                 add_follow_head = False
                                 break
 
-                            # símbolo não-terminal → adiciona FIRST(symbol) - {ε}
-                            primeiro_beta.update(x for x in first(symbol, G) if x != EPS)
-                            if EPS in first(symbol, G):
+                            # símbolo não-terminal → adiciona FIRST(simbolo) - {ε}
+                            primeiro_beta.update(x for x in first(simbolo, G) if x != EPS)
+                            if EPS in first(simbolo, G):
                                 add_follow_head = True
                                 continue
                             else:
@@ -253,14 +226,14 @@ def follow(A, G):
                         before = len(FOLLOW[B])
                         FOLLOW[B].update(x for x in primeiro_beta if x != EPS)
                         if len(FOLLOW[B]) != before:
-                            changed = True
+                            mudanca = True
 
                         # Se beta →* ε, adiciona FOLLOW(head) a FOLLOW(B)
                         if add_follow_head or (EPS in primeiro_beta):
                             before = len(FOLLOW[B])
                             FOLLOW[B].update(FOLLOW[head])
                             if len(FOLLOW[B]) != before:
-                                changed = True
+                                mudanca = True
 
     return FOLLOW[A]
 __all__ = ["grammar", "first", "follow", "EPS"]
