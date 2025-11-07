@@ -1,18 +1,6 @@
 # grammar.py
-# -------------------------
-# Gramática da linguagem exemplo do projeto
-# -------------------------
-# Este arquivo define:
-# 1. A gramática da linguagem (em forma de dicionário Python)
-# 2. Funções auxiliares para calcular os conjuntos FIRST e FOLLOW
-#
-# Símbolo de epsilon (produção vazia): "ε"
-
 from collections import defaultdict, deque
-
-# ===============================================================
-#                   DEFINIÇÃO DA GRAMÁTICA
-# ===============================================================
+#DEFINIÇÃO DA GRAMÁTICA
 # Cada não-terminal (como "PROGRAMA", "BLOCO", etc.)
 # mapeia para uma lista de produções.
 # Cada produção é uma lista de símbolos (terminais ou não-terminais).
@@ -113,9 +101,7 @@ grammar = {
 # Símbolo especial epsilon
 EPS = "ε"
 
-# ===============================================================
-#                   FUNÇÕES AUXILIARES
-# ===============================================================
+# FUNÇÕES AUXILIARES
 
 def is_nonterminal(sym):
     """
@@ -125,9 +111,7 @@ def is_nonterminal(sym):
     return sym in grammar
 
 
-# ===============================================================
 #               CÁLCULO DO CONJUNTO FIRST
-# ===============================================================
 def first(X, G):
     """
     Retorna o conjunto FIRST(X):
@@ -202,9 +186,7 @@ def first(X, G):
     return FIRST[X]
 
 
-# ===============================================================
 #               CÁLCULO DO CONJUNTO FOLLOW
-# ===============================================================
 def follow(A, G):
     """
     Retorna o conjunto FOLLOW(A):
@@ -281,9 +263,4 @@ def follow(A, G):
                                 changed = True
 
     return FOLLOW[A]
-
-
-# ===============================================================
-#           EXPORTAÇÃO DOS ELEMENTOS DO MÓDULO
-# ===============================================================
 __all__ = ["grammar", "first", "follow", "EPS"]

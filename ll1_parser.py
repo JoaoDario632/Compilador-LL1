@@ -11,9 +11,7 @@ class AnalisadorSintaticoLL1:
         # Cria a tabela LL(1) automaticamente com base na gramática
         self.analiseTabela = self.construir_tabela_ll1()
 
-    # ----------------------------------------------------
     # Construção da Tabela LL(1)
-    # ----------------------------------------------------
     def construir_tabela_ll1(self):
         tabela = {}
 
@@ -51,10 +49,8 @@ class AnalisadorSintaticoLL1:
 
         return tabela
 
-    # ----------------------------------------------------
     # Função principal de análise sintática
     # Recebe uma lista de tokens do analisador léxico
-    # ----------------------------------------------------
     def analisar(self, tokens):
         # Inicializa a pilha com o símbolo inicial e EOF
         pilha = ["EOF", "PROGRAMA"]
