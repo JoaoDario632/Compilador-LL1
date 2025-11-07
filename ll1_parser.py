@@ -1,14 +1,10 @@
 # Importa a gramática e as funções FIRST e FOLLOW
 from grammar import grammar, first, follow
 
-# ----------------------------------------------------
-# Classe: AnalisadorSintaticoLL1
-# Implementa um analisador sintático preditivo LL(1)
-# ----------------------------------------------------
 class AnalisadorSintaticoLL1:
     def __init__(self, gramatica):
         self.gramatica = gramatica
-        # Cria a tabela LL(1) automaticamente com base na gramática
+        self.simbolo_inicial = "PROGRAMA_G"  #símbolo inicial ajustado
         self.analiseTabela = self.construir_tabela_ll1()
 
     # Construção da Tabela LL(1)
@@ -42,18 +38,17 @@ class AnalisadorSintaticoLL1:
                     chave = (cabeca, simbolo)
                     tabela[chave] = producao
 
-                # Se ε ∈ FIRST(A → α), adiciona regra também para FOLLOW(A)
+                # Corrigido: agora passa o start_symbol
                 if "ε" in conjPrimeiro:
-                    for simbolo in follow(cabeca, self.gramatica):
+                    for simbolo in follow(cabeca, self.gramatica, self.simbolo_inicial):
                         tabela[(cabeca, simbolo)] = producao
 
         return tabela
 
     # Função principal de análise sintática
-    # Recebe uma lista de tokens do analisador léxico
     def analisar(self, tokens):
-        # Inicializa a pilha com o símbolo inicial e EOF
-        pilha = ["EOF", "PROGRAMA"]
+        # Ajustado o símbolo inicial da pilha
+        pilha = ["EOF", self.simbolo_inicial]
         posicao = 0
         ttoken = tokens[posicao][0]  # tipo do token atual
 
@@ -79,7 +74,7 @@ class AnalisadorSintaticoLL1:
                     print("→ Recuperando em modo pânico.")
 
                     # Recuperação de erro: ignora tokens até encontrar algo no FOLLOW
-                    follow_topo = follow(topo, self.gramatica)
+                    follow_topo = follow(topo, self.gramatica, self.simbolo_inicial)
                     while ttoken not in follow_topo and ttoken != "EOF":
                         posicao += 1
                         if posicao < len(tokens):
