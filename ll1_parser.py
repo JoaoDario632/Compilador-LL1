@@ -1,35 +1,48 @@
-# Importa a gramática e as funções FIRST e FOLLOW
+# ------------------------------------------------------------
+# Importa a gramática e as funções auxiliares (FIRST e FOLLOW)
+# ------------------------------------------------------------
 from grammar import grammar, first, follow
 
+# ============================================================
+# CLASSE: AnalisadorSintaticoLL1
+# ============================================================
+# Implementa um analisador preditivo descendente baseado em tabela LL(1)
+# Ele utiliza os conjuntos FIRST e FOLLOW para construir a tabela de análise
+# e percorre a lista de tokens, verificando se a sequência é válida
+# conforme a gramática definida.
+# ============================================================
 class AnalisadorSintaticoLL1:
     def __init__(self, gramatica):
         self.gramatica = gramatica
-        self.simbolo_inicial = "PROGRAMA_G"  #símbolo inicial ajustado
-        self.analiseTabela = self.construir_tabela_ll1()
+        self.simbolo_inicial = "PROGRAMA_G"  # Símbolo inicial da gramática
+        self.analiseTabela = self.construir_tabela_ll1()  # Cria a tabela LL(1)
 
-    # Construção da Tabela LL(1)
+    # ========================================================
+    # CONSTRUÇÃO DA TABELA LL(1)
+    # ========================================================
     def construir_tabela_ll1(self):
         tabela = {}
 
-        # Percorre todas as produções da gramática
+        # Para cada produção A → α da gramática
         for cabeca, producoes in self.gramatica.items():
             for producao in producoes:
-                conjPrimeiro = set()
-                encontrou_vazio = True  # Indica se ε (vazio) é possível
+                conjPrimeiro = set()     # FIRST(α)
+                encontrou_vazio = True   # Indica se ε é possível na produção
 
-                # Percorre cada símbolo da produção
+                # Percorre cada símbolo da produção (α)
                 for simbolo in producao:
-                    # Calcula o FIRST do símbolo
+                    # Obtém FIRST(simbolo)
                     primeiros = first(simbolo, self.gramatica)
+
                     # Adiciona tudo que não é ε
                     conjPrimeiro |= (primeiros - {"ε"})
 
-                    # Se o símbolo não gera ε, para o loop
+                    # Se o símbolo não gera ε, para a busca
                     if "ε" not in primeiros:
                         encontrou_vazio = False
                         break
 
-                # Se todos os símbolos puderem gerar ε, adiciona ε ao conjunto
+                # Se todos os símbolos da produção geram ε, adiciona ε
                 if encontrou_vazio:
                     conjPrimeiro.add("ε")
 
@@ -38,42 +51,57 @@ class AnalisadorSintaticoLL1:
                     chave = (cabeca, simbolo)
                     tabela[chave] = producao
 
-                # Corrigido: agora passa o start_symbol
+                # Se a produção pode gerar ε, adiciona também FOLLOW(A)
                 if "ε" in conjPrimeiro:
                     for simbolo in follow(cabeca, self.gramatica, self.simbolo_inicial):
                         tabela[(cabeca, simbolo)] = producao
 
         return tabela
 
-    # Função principal de análise sintática
+
+    # ========================================================
+    # ANÁLISE SINTÁTICA (Preditiva)
+    # ========================================================
     def analisar(self, tokens):
-        # Ajustado o símbolo inicial da pilha
-        pilha = ["EOF", self.simbolo_inicial]
+        """
+        Executa a análise sintática LL(1) com modo de recuperação de erros.
+        tokens: lista de tuplas (tipo_token, valor_token)
+        """
+        pilha = ["EOF", self.simbolo_inicial]  # Pilha começa com símbolo inicial
         posicao = 0
-        ttoken = tokens[posicao][0]  # tipo do token atual
+        ttoken = tokens[posicao][0]  # Tipo do token atual (ex: IDENT, NUMERO_INT, etc.)
 
-        # Loop principal de análise
+        # Loop principal — executa enquanto a pilha não estiver vazia
         while pilha:
-            topo = pilha.pop()  # Lê o topo da pilha
+            topo = pilha.pop()  # Remove o topo da pilha
 
-            # Caso 1: o topo da pilha é igual ao token → consome o token
+            # ------------------------------------------------
+            # CASO 1: Topo da pilha é igual ao token atual
+            # ------------------------------------------------
             if topo == ttoken:
+                # Consome o token
                 posicao += 1
                 if posicao < len(tokens):
                     ttoken = tokens[posicao][0]
                 continue
 
-            # Caso 2: topo é um não-terminal → consulta a tabela LL(1)
+            # ------------------------------------------------
+            # CASO 2: Topo é um não-terminal
+            # ------------------------------------------------
             elif topo in self.gramatica:
+                # Busca uma produção A→α na tabela LL(1)
                 regra = self.analiseTabela.get((topo, ttoken))
 
-                # Se não existe regra correspondente → erro sintático
+                # Se não há regra para o par (A, token), erro sintático
                 if not regra:
                     esperados = [k[1] for k in self.analiseTabela if k[0] == topo]
                     print(f"[ERRO] Esperado um de {esperados}, mas encontrado '{ttoken}'.")
                     print("→ Recuperando em modo pânico.")
 
-                    # Recuperação de erro: ignora tokens até encontrar algo no FOLLOW
+                    # ------------------------------------------------
+                    # MODO PÂNICO:
+                    # Avança os tokens até encontrar um símbolo do FOLLOW(top)
+                    # ------------------------------------------------
                     follow_topo = follow(topo, self.gramatica, self.simbolo_inicial)
                     while ttoken not in follow_topo and ttoken != "EOF":
                         posicao += 1
@@ -81,18 +109,24 @@ class AnalisadorSintaticoLL1:
                             ttoken = tokens[posicao][0]
                         else:
                             break
-                    continue  # tenta continuar análise após a recuperação
+                    continue  # Tenta continuar análise após a recuperação
 
-                # Se a regra foi encontrada, empilha a produção (em ordem reversa)
+                # ------------------------------------------------
+                # Regra encontrada: empilha a produção (em ordem reversa)
+                # ------------------------------------------------
                 for simbolo in reversed(regra):
-                    if simbolo != "ε":  # ignora produções vazias
+                    if simbolo != "ε":  # Não empilha produções vazias
                         pilha.append(simbolo)
 
-            # Caso 3: topo é ε → simplesmente ignora
+            # ------------------------------------------------
+            # CASO 3: Topo é ε (produção vazia) → ignora
+            # ------------------------------------------------
             elif topo == "ε":
                 continue
 
-            # Caso 4: erro inesperado (símbolo terminal incorreto)
+            # ------------------------------------------------
+            # CASO 4: Erro — terminal inesperado
+            # ------------------------------------------------
             else:
                 print(f"[ERRO] Token inesperado '{ttoken}', esperado '{topo}'.")
                 posicao += 1
@@ -100,5 +134,4 @@ class AnalisadorSintaticoLL1:
                     ttoken = tokens[posicao][0]
                 else:
                     break
-
         print("\nAnálise sintática concluída (modo pânico ativo).")
