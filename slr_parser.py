@@ -1,31 +1,36 @@
 from grammar import grammar, follow
+from tabulate import tabulate
 
-def converter_gramatica_para_lr0(G):
+def Conversao(G):
     nova = {}
     for cab, prods in G.items():
-        novas_prods = []
+        novas = []
         for p in prods:
             if p == ["ε"]:
-                novas_prods.append([])   # produção realmente vazia
+                novas.append([])
             else:
-                novas_prods.append(p)
-        nova[cab] = novas_prods
+                novas.append(p)
+        nova[cab] = novas
     return nova
+def TabelaGramatica(G):
+    tabela = []
 
-def mostrar_gramatica_lr0(G):
-    print("\n===== Conversão gramática para a LR0 =====\n")
     for cab, prods in G.items():
-        print(f"{cab} → ", end="")
-        regras = []
         for p in prods:
             if p == []:
-                regras.append("ε")
+                prod_texto = "ε"
             else:
-                regras.append(" ".join(p))
-        print(" | ".join(regras))
-    print("\n===========================================\n")
+                prod_texto = " ".join(p)
+            tabela.append([cab, prod_texto])
 
+    print("\n=== GRAMÁTICA CONVERTIDA PARA LR(0) ===\n")
+    print(tabulate(
+        tabela,
+        headers=["Não-terminal", "Produção"],
+        tablefmt="fancy_grid"
+    ))
 def itens_lr0(gramatica):
+
     inicial = list(gramatica.keys())[0]
 
     novaGramatica = {"S'": [[inicial]]}
@@ -34,20 +39,19 @@ def itens_lr0(gramatica):
     def fechamento(itens):
         fecho = set(itens)
         alterou = True
-
         while alterou:
             alterou = False
             novos = set()
 
-            for (cabeca, producao, ponto) in fecho:
-                if ponto < len(producao):
-                    simbolo = producao[ponto]
+            for (cab, prod, ponto) in fecho:
+                if ponto < len(prod):
+                    simbolo = prod[ponto]
 
                     if simbolo in novaGramatica:
-                        for prod in novaGramatica[simbolo]:
-                            novo_item = (simbolo, tuple(prod), 0)
-                            if novo_item not in fecho:
-                                novos.add(novo_item)
+                        for p in novaGramatica[simbolo]:
+                            item = (simbolo, tuple(p), 0)
+                            if item not in fecho:
+                                novos.add(item)
 
             if novos:
                 fecho |= novos
@@ -55,133 +59,120 @@ def itens_lr0(gramatica):
 
         return frozenset(fecho)
 
-    def ir_para(itens, simbolo):
+
+    def GOTO(itens, simbolo):
         mov = set()
-        for (cabeca, producao, ponto) in itens:
-            if ponto < len(producao) and producao[ponto] == simbolo:
-                mov.add((cabeca, producao, ponto + 1))
+        for (cab, prod, ponto) in itens:
+            if ponto < len(prod) and prod[ponto] == simbolo:
+                mov.add((cab, prod, ponto+1))
         return fechamento(mov)
 
-    estado0 = fechamento({("S'", (inicial,), 0)})
 
+    estado0 = fechamento({("S'", (inicial,), 0)})
     estados = [estado0]
-    transicoes = {}
+    trans = {}
     alterou = True
 
     while alterou:
         alterou = False
-
         for i, estado in enumerate(estados):
-            simbolos = set()
 
-            for (cabeca, prod, ponto) in estado:
+            simbolos = set()
+            for (cab, prod, ponto) in estado:
                 if ponto < len(prod):
                     simbolos.add(prod[ponto])
 
-            for simbolo in simbolos:
-                destino = ir_para(estado, simbolo)
+            for s in simbolos:
+                destino = GOTO(estado, s)
 
-                if destino and destino not in estados:
+                if destino not in estados:
                     estados.append(destino)
                     alterou = True
 
-                transicoes[(i, simbolo)] = estados.index(destino)
+                trans[(i, s)] = estados.index(destino)
 
-    return estados, transicoes, novaGramatica
+    return estados, trans, novaGramatica
 
-def construir_tabela_slr(gramatica):
-    estados, transicoes, nova = itens_lr0(gramatica)
+def ConstrucaoTabelaSLR(gramatica):
+    estados, trans, nova = itens_lr0(gramatica)
 
-    acaoTabela = {}
-    TableGoTo = {}
-    start_symbol = "PROGRAMA_G"
+    acao = {}
+    goto = {}
+    start = "PROGRAMA_G"
 
     for i, estado in enumerate(estados):
-        for (cabeca, prod, ponto) in estado:
+        for (cab, prod, ponto) in estado:
 
-            # SHIFT
             if ponto < len(prod):
                 simbolo = prod[ponto]
                 if simbolo not in gramatica:
-                    j = transicoes.get((i, simbolo))
+                    j = trans.get((i, simbolo))
                     if j is not None:
-                        acaoTabela[(i, simbolo)] = ("shift", j)
+                        acao[(i, simbolo)] = ("shift", j)
 
-            # REDUCE / ACCEPT
             else:
-                if cabeca == "S'":
-                    acaoTabela[(i, "EOF")] = ("accept", None)
+                if cab == "S'":
+                    acao[(i, "EOF")] = ("accept", None)
                 else:
-                    for a in follow(cabeca, grammar, start_symbol):
-                        acaoTabela[(i, a)] = ("reduce", (cabeca, prod))
-
-        # GOTO
-        for simbolo in gramatica.keys():
-            j = transicoes.get((i, simbolo))
+                    for a in follow(cab, grammar, start):
+                        acao[(i, a)] = ("reduce", (cab, prod))
+        for s in gramatica.keys():
+            j = trans.get((i, s))
             if j is not None:
-                TableGoTo[(i, simbolo)] = j
+                goto[(i, s)] = j
 
-    return acaoTabela, TableGoTo, estados
-
+    return acao, goto, estados
 def analisar_slr(tokens, gramatica_original):
     print("\n[SLR] Convertendo gramática para formato LR(0)...")
+    gram_lr0 = Conversao(gramatica_original)
+    TabelaGramatica(gram_lr0)
+    acao, goto, estados = ConstrucaoTabelaSLR(gram_lr0)
 
-    # 1) Converte ε → []
-    gram_lr0 = converter_gramatica_para_lr0(gramatica_original)
-
-    # 2) Mostra a gramática convertida
-    mostrar_gramatica_lr0(gram_lr0)
-
-    # 3) Constrói ACTION e GOTO
-    acaoTabela, TableGoTo, estados = construir_tabela_slr(gram_lr0)
-
-    pilha_estados = [0]
-    pilha_simbolos = []
+    pilha_est = [0]
+    pilha_simb = []
 
     pos = 0
     simbolo = tokens[pos][0]
 
     while True:
-        estado = pilha_estados[-1]
-        acao = acaoTabela.get((estado, simbolo))
+        estado = pilha_est[-1]
+        entrada = simbolo
 
-        if not acao:
-            print(f"[ERRO] SLR: símbolo inesperado '{simbolo}' no estado {estado}.")
+        act = acao.get((estado, entrada))
+
+        if not act:
+            print(f"[ERRO] SLR: símbolo inesperado '{entrada}' no estado {estado}.")
             return False
 
-        tipo, valor = acao
+        tipo, valor = act
 
         # SHIFT
         if tipo == "shift":
-            pilha_simbolos.append(simbolo)
-            pilha_estados.append(valor)
+            pilha_simb.append(entrada)
+            pilha_est.append(valor)
             pos += 1
             simbolo = tokens[pos][0]
             continue
 
         # REDUCE
         if tipo == "reduce":
-            cabeca, prod = valor
+            cab, prod = valor
 
-            # Produção vazia não desempilha
             if len(prod) > 0:
                 for _ in prod:
-                    pilha_estados.pop()
-                    pilha_simbolos.pop()
+                    pilha_est.pop()
+                    pilha_simb.pop()
 
-            topo = pilha_estados[-1]
-            pilha_simbolos.append(cabeca)
+            topo = pilha_est[-1]
+            pilha_simb.append(cab)
 
-            goto = TableGoTo.get((topo, cabeca))
-
-            if goto is None:
-                print(f"[ERRO] SLR: GOTO inválido após reduzir {cabeca} → {prod}")
+            g = goto.get((topo, cab))
+            if g is None:
+                print(f"[ERRO] SLR: goto inválido após reduzir {cab} → {prod}")
                 return False
 
-            pilha_estados.append(goto)
+            pilha_est.append(g)
             continue
-
-        # ACCEPT
         if tipo == "accept":
-            print("Análise SLR(1) concluída com sucesso")
+            print("Análise SLR(1) concluída com sucesso!")
             return True
