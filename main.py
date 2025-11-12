@@ -1,3 +1,4 @@
+#main.py
 from scanner import analisador_lexico
 from ll1_parser import AnalisadorSintaticoLL1
 from grammar import grammar, first, follow
