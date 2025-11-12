@@ -95,7 +95,7 @@ class AnalisadorSintaticoLL1:
                 # Se não há regra para o par (A, token), erro sintático
                 if not regra:
                     esperados = [k[1] for k in self.analiseTabela if k[0] == topo]
-                    print(f"[ERRO] Esperado um de {esperados}, mas encontrado '{ttoken}'.")
+                    print(f"[ERRO] [Linha {tokens[posicao][2]}] [{topo}] Esperado um de {esperados}, mas encontrado '{ttoken}'.")
                     print("→ Recuperando em modo pânico.")
 
                     # ------------------------------------------------
@@ -128,7 +128,7 @@ class AnalisadorSintaticoLL1:
             # CASO 4: Erro — terminal inesperado
             # ------------------------------------------------
             else:
-                print(f"[ERRO] Token inesperado '{ttoken}', esperado '{topo}'.")
+                print(f"[ERRO] [Linha {tokens[posicao][2]}] Token inesperado '{ttoken}', esperado '{topo}'.")
                 posicao += 1
                 if posicao < len(tokens):
                     ttoken = tokens[posicao][0]

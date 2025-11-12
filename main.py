@@ -14,8 +14,8 @@ def execucaoAnalisador(caminho_arquivo: str):
 
     exibicao(tokens)
     print("=== ETAPA 2: FIRST & FOLLOW ===")
-    print("FIRST(DECL_FUNCOES_G):", first("DECL_FUNCOES_G", grammar))
-    print("FOLLOW(DECL_FUNCOES_G):", follow("DECL_FUNCOES_G", grammar, "PROGRAMA_G"))
+    print("FIRST(PROGRAMA_G):", first("PROGRAMA_G", grammar))
+    print("FOLLOW(PROGRAMA_G):", follow("PROGRAMA_G", grammar, "PROGRAMA_G"))
 
     print("\n=== ETAPA 3: ANÁLISE SINTÁTICA ===")
     parser = AnalisadorSintaticoLL1(grammar)

@@ -17,71 +17,98 @@ grammar = {
 
     # Declaração de funções (recursiva)
     "DECL_FUNCOES_G": [
-        ["FUNCAO", "IDENT", "LPAREN", "PARAMS_G", "RPAREN", "LCHAVE", "CORPO_G", "RCHAVE", "DECL_FUNCOES_G"],
+        ["FUNCAO", "TIPO_VAR", "IDENT", "LPAREN", "PARAMS_G", "RPAREN", "LCHAVE", "COMANDOS_G", "RCHAVE", "DECL_FUNCOES_G"],
         ["ε"]
     ],
+    "CHAM_FUNCOES_G": [["IDENT", "LPAREN", "ARGUMENTOS_G", "RPAREN"]],
 
     # Função principal obrigatória
-    "PRINCIPAL_G": [["PRINCIPAL", "LPAREN", "RPAREN", "LCHAVE", "CORPO_G", "RCHAVE"]],
+    "PRINCIPAL_G": [["PRINCIPAL", "LCHAVE", "COMANDOS_G", "RCHAVE"]],
 
     # Declaração de parâmetros formais de funções
     "PARAMS_G": [["TIPO_VAR", "IDENT", "PARAMS_RESTO_G"], ["ε"]],
     "PARAMS_RESTO_G": [["VIRGULA", "TIPO_VAR", "IDENT", "PARAMS_RESTO_G"], ["ε"]],
-
-    # Corpo da função = declarações + comandos
-    "CORPO_G": [["DECLARACOES_G", "COMANDOS_G"]],
-
-    # Declarações de variáveis locais
-    "DECLARACOES_G": [
-        ["TIPO_VAR", "IDENT", "DECLARACOES_RESTO_G", "PONTOVIRG", "DECLARACOES_G"],
-        ["ε"]
-    ],
-    "DECLARACOES_RESTO_G": [["VIRGULA", "IDENT", "DECLARACOES_RESTO_G"], ["ε"]],
 
     # Lista de comandos (sequência de comandos)
     "COMANDOS_G": [["COMANDO_G", "COMANDOS_G"], ["ε"]],
 
     # Definição dos comandos disponíveis
     "COMANDO_G": [
+        # Declaração de variável
+        ["DECLARACOES_G", "PONTOVIRG"],
+        # Elemento com identificador
+        ["IDENT", "ELEMENTO_IDENT_G", "PONTOVIRG"],
         # Estrutura condicional SE/SENÃO
         ["SE", "LPAREN", "EXPRESSAO_G", "RPAREN", "LCHAVE", "COMANDOS_G", "RCHAVE", "SENAO_G"],
         # Estrutura de repetição ENQUANTO
         ["ENQUANTO", "LPAREN", "EXPRESSAO_G", "RPAREN", "LCHAVE", "COMANDOS_G", "RCHAVE"],
+        # Estrutura de repetição FAÇA ENQUANTO
+        ["FACA", "LCHAVE", "COMANDOS_G", "RCHAVE", "ENQUANTO", "LPAREN", "EXPRESSAO_G", "RPAREN", "PONTOVIRG"],
         # Estrutura de repetição PARA
-        ["PARA", "LPAREN", "ATRIBUICAO_G", "PONTOVIRG", "EXPRESSAO_G", "PONTOVIRG", "ATRIBUICAO_G", "RPAREN", "LCHAVE", "COMANDOS_G", "RCHAVE"],
-        # Comando de saída (escrever na tela)
-        ["ESCREVER", "LPAREN", "ARGUMENTOS_G", "RPAREN", "PONTOVIRG"],
+        ["PARA", "LPAREN", "DECL_OU_ATRIB_G", "PONTOVIRG", "EXPRESSAO_G", "PONTOVIRG", "ATRIBUICAO_G", "RPAREN", "LCHAVE", "COMANDOS_G", "RCHAVE"],
         # Retorno de função
-        ["RETORNO", "EXPRESSAO_G", "PONTOVIRG"],
-        # Atribuição simples
-        ["ATRIBUICAO_G", "PONTOVIRG"]
+        ["RETORNO", "EXPRESSAO_G", "PONTOVIRG"]
+    ],
+
+    # Declaração ou Atribuição
+    "DECL_OU_ATRIB_G": [["DECLARACOES_G"], ["ATRIBUICAO_G"]],
+
+    # Declarações de variáveis locais
+    "DECLARACOES_G": [
+        ["TIPO_VAR", "IDENT", "DECLARACOES_ATRIB_G", "DECLARACOES_RESTO_G"]
+    ],
+    "DECLARACOES_RESTO_G": [["VIRGULA", "IDENT", "DECLARACOES_ATRIB_G", "DECLARACOES_RESTO_G"], ["ε"]],
+    "DECLARACOES_ATRIB_G": [["ATRIB", "EXPRESSAO_G"], ["ε"]],
+
+    # Atribuição de variável
+    "ATRIBUICAO_G": [["IDENT", "ATRIB", "EXPRESSAO_G"]],
+
+    # Elemento com identificador
+    "ELEMENTO_IDENT_G": [
+        ["ATRIB", "EXPRESSAO_G"],               # Atribuição de variável
+        ["LPAREN", "ARGUMENTOS_G", "RPAREN"]    # Chamada de função
     ],
 
     # Bloco opcional SENÃO
     "SENAO_G": [["SENAO", "LCHAVE", "COMANDOS_G", "RCHAVE"], ["ε"]],
 
-    # Atribuição de variável
-    "ATRIBUICAO_G": [["IDENT", "ATRIB", "EXPRESSAO_G"]],
-
     # Argumentos de uma função (chamada)
     "ARGUMENTOS_G": [["EXPRESSAO_G", "ARGUMENTOS_RESTO_G"], ["ε"]],
     "ARGUMENTOS_RESTO_G": [["VIRGULA", "EXPRESSAO_G", "ARGUMENTOS_RESTO_G"], ["ε"]],
 
-    # Expressões aritméticas e lógicas
-    "EXPRESSAO_G": [["TERMO_G", "EXPRESSAO_RESTO_G"]],
-    "EXPRESSAO_RESTO_G": [["OPER_ARIT", "TERMO_G", "EXPRESSAO_RESTO_G"], ["ε"]],
+    # Expressões
+    "EXPRESSAO_G": [["EXPR_LOGICA_G"]],
+
+    # Lógicas Binárias
+    "EXPR_LOGICA_G": [["EXPR_COMPAR_G", "EXPR_LOGICA_RESTO_G"]],
+    "EXPR_LOGICA_RESTO_G": [["OPER_LOGI_BIN", "EXPR_COMPAR_G", "EXPR_LOGICA_RESTO_G"], ["ε"]],
+
+    # Comparativas
+    "EXPR_COMPAR_G": [["EXPR_ARITMETICA_G", "EXPR_COMPAR_RESTO_G"]],
+    "EXPR_COMPAR_RESTO_G": [["COMPAR", "EXPR_ARITMETICA_G", "EXPR_COMPAR_RESTO_G"], ["ε"]],
+
+    # Aritméticas
+    "EXPR_ARITMETICA_G": [["TERMO_G", "EXPR_ARITMETICA_RESTO_G"]],
+    "EXPR_ARITMETICA_RESTO_G": [["OPER_ARIT", "TERMO_G", "EXPR_ARITMETICA_RESTO_G"], ["ε"]],
+
+    # Termos
     "TERMO_G": [["FATOR_G", "TERMO_RESTO_G"]],
     "TERMO_RESTO_G": [["OPER_ARIT", "FATOR_G", "TERMO_RESTO_G"], ["ε"]],
 
     # Fatores podem ser números, variáveis, strings, booleanos, etc.
     "FATOR_G": [
         ["LPAREN", "EXPRESSAO_G", "RPAREN"],  # Expressão entre parênteses
-        ["IDENT"],                            # Identificador
+        ["OPER_LOGI_UN", "FATOR_G"],          # Operador lógico unário (not)
+        ["IDENT", "FATOR_IDENT_G"],           # Identificador
         ["NUMERO_INT"],                       # Inteiro
         ["NUMERO_REAL"],                      # Real
         ["PALAVRA"],                          # String/palavra
         ["CARACTERE"],                        # Caractere
         ["BOOLEANO"]                          # Booleano (true/false)
+    ],
+    "FATOR_IDENT_G": [
+        ["LPAREN", "ARGUMENTOS_G", "RPAREN"], # Função
+        ["ε"],                                # Variável
     ],
 }
 
