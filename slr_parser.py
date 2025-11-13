@@ -13,21 +13,28 @@ def Conversao(G):
         nova[cab] = novas
     return nova
 def TabelaGramatica(G):
-    tabela = []
+    print("\n=== GRAMÁTICA CONVERTIDA PARA LR(0) ===\n")
+
+    linhas = []
 
     for cab, prods in G.items():
+        bloco = []
         for p in prods:
             if p == []:
                 prod_texto = "ε"
             else:
                 prod_texto = " ".join(p)
-            tabela.append([cab, prod_texto])
 
-    print("\n=== GRAMÁTICA CONVERTIDA PARA LR(0) ===\n")
+            bloco.append(f"  • {prod_texto}")
+
+        linhas.append([cab, "\n".join(bloco)])
+
     print(tabulate(
-        tabela,
-        headers=["Não-terminal", "Produção"],
-        tablefmt="fancy_grid"
+        linhas,
+        headers=["Não-terminal", "Produções"],
+        tablefmt="fancy_grid",
+        maxcolwidths=[20, 80],
+        stralign="left"
     ))
 def itens_lr0(gramatica):
 
