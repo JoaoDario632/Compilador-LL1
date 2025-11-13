@@ -24,44 +24,38 @@ def TabelaGramatica(G):
         maxcolwidths=[20, 80]
     ))
 
-def TabelaEstadosLR0(estados, trans):
-    print("\n=== ESTADOS LR(0) — RESUMIDO ===\n")
+
+# ---------------------------------------------------------------------
+# 📌  NOVA FUNÇÃO: Tabela de Redução Melhorada
+# ---------------------------------------------------------------------
+def imprimir_tabela_reducao(passos, ultimos=25):
+
+    print("\n=== TABELA DE REDUÇÃO — ÚLTIMOS PASSOS ===\n")
+
+    # pega só a parte final
+    ult = passos[-ultimos:] if len(passos) > ultimos else passos
 
     linhas = []
 
-    for idx, estado in enumerate(estados):
-        qtd_itens = len(estado)
-        simbolos = sorted({s for (e, s) in trans.keys() if e == idx})
+    for (num, pilha_est, pilha_simb, entrada, acao) in ult:
+
+        def corta(txt, max_len=35):
+            txt = str(txt)
+            return txt if len(txt) <= max_len else txt[:max_len] + " ..."
+
         linhas.append([
-            f"I{idx}",
-            qtd_itens,
-            ", ".join(simbolos)
+            num,
+            corta(pilha_est, 30),
+            corta(pilha_simb, 30),
+            entrada,
+            corta(acao, 40)
         ])
 
     print(tabulate(
         linhas,
-        headers=["Estado", "Qtd Itens", "Transições (símbolos)"],
-        tablefmt="fancy_grid"
-    ))
-
-def TabelaGoto(goto, gramatica):
-    print("\n=== TABELA GOTO (SLR) — RESUMIDA ===\n")
-
-    nao_term = sorted(list(gramatica.keys()))
-    estados = sorted({e for e, _ in goto.keys()})
-
-    linhas = []
-    for e in estados:
-        linha = [e]
-        for nt in nao_term:
-            destino = goto.get((e, nt), "")
-            linha.append(destino if destino != "" else "")
-        linhas.append(linha)
-
-    print(tabulate(
-        linhas,
-        headers=["Estado"] + nao_term,
+        headers=["Passo", "Pilha Estados", "Pilha Símbolos", "Entrada", "Ação"],
         tablefmt="fancy_grid",
+        maxcolwidths=[7, 30, 30, 10, 40],
         stralign="center"
     ))
 
@@ -76,7 +70,6 @@ def itens_lr0(G):
         while mudou:
             mudou = False
             novos = set()
-
             for (A, prod, ponto) in fecho:
                 if ponto < len(prod):
                     X = prod[ponto]
@@ -85,28 +78,26 @@ def itens_lr0(G):
                             item = (X, tuple(p), 0)
                             if item not in fecho:
                                 novos.add(item)
-
             if novos:
                 fecho |= novos
                 mudou = True
-
         return frozenset(fecho)
 
     def GOTO(I, X):
-        mov = {(A, prod, ponto+1) for (A, prod, ponto) in I 
+        mov = {(A, prod, ponto + 1)
+               for (A, prod, ponto) in I
                if ponto < len(prod) and prod[ponto] == X}
         return fechamento(mov) if mov else frozenset()
 
     I0 = fechamento({("S'", (inicial,), 0)})
     estados = [I0]
     trans = {}
-    mudou = True
 
+    mudou = True
     while mudou:
         mudou = False
         for i, estado in enumerate(estados):
             simbolos = set(prod[p] for (A, prod, p) in estado if p < len(prod))
-
             for X in simbolos:
                 dest = GOTO(estado, X)
                 if dest and dest not in estados:
@@ -115,6 +106,7 @@ def itens_lr0(G):
                 trans[(i, X)] = estados.index(dest)
 
     return estados, trans, G2
+
 
 def ConstrucaoTabelaSLR(G):
     estados, trans, G2 = itens_lr0(G)
@@ -125,15 +117,15 @@ def ConstrucaoTabelaSLR(G):
 
     for i, estado in enumerate(estados):
         for (A, prod, p) in estado:
-            # SHIFT
+
             if p < len(prod):
                 sym = prod[p]
-                if sym not in G:
+                if sym not in G:  # terminal
                     j = trans.get((i, sym))
                     if j is not None:
                         acao[(i, sym)] = ("shift", j)
 
-            else:
+            else:  # REDUCE
                 if A == "S'":
                     acao[(i, "EOF")] = ("accept", None)
                 else:
@@ -144,10 +136,6 @@ def ConstrucaoTabelaSLR(G):
             j = trans.get((i, nt))
             if j is not None:
                 goto[(i, nt)] = j
-
-    TabelaEstadosLR0(estados, trans)
-    TabelaGoto(goto, G)
-
     return acao, goto, estados
 
 def _formata_pilha_est(pilha, max_len=6):
@@ -155,10 +143,12 @@ def _formata_pilha_est(pilha, max_len=6):
         return str(pilha)
     return f"... {pilha[-max_len:]}"
 
+
 def _formata_pilha_simb(pilha, max_len=6):
     if len(pilha) <= max_len:
         return " ".join(pilha)
     return "... " + " ".join(pilha[-max_len:])
+
 
 def _formata_acao(tipo, valor):
     if tipo == "shift":
@@ -171,7 +161,9 @@ def _formata_acao(tipo, valor):
         return "accept"
     return str((tipo, valor))
 
+
 def analisar_slr(tokens, G_original):
+
     print("\n[SLR] Convertendo gramática...")
     G = Conversao(G_original)
 
@@ -229,43 +221,6 @@ def analisar_slr(tokens, G_original):
         if tipo == "accept":
             break
 
-    # ==========================================================
-    #       FILTRAGEM (REDUCE/ACCEPT)  +  LIMITAÇÃO DE N PASSOS
-    # ==========================================================
-    print("\n=== TABELA DO PROCESSO DE REDUÇÃO (FILTRADA) ===\n")
-
-    passos_filtrados = [
-        p for p in passos
-        if p[4].startswith("reduce") or p[4].startswith("accept")
-    ]
-
-    N = 25  # quantidade de passos a mostrar
-
-    if len(passos_filtrados) > 2 * N:
-        primeiros = passos_filtrados[:N]
-        ultimos = passos_filtrados[-N:]
-
-        print("=== PRIMEIROS PASSOS ===\n")
-        print(tabulate(
-            primeiros,
-            headers=["Passo", "Pilha Estados", "Pilha Símbolos", "Entrada", "Ação"],
-            tablefmt="fancy_grid"
-        ))
-
-        print("\n...\n")
-
-        print("=== ÚLTIMOS PASSOS ===\n")
-        print(tabulate(
-            ultimos,
-            headers=["Passo", "Pilha Estados", "Pilha Símbolos", "Entrada", "Ação"],
-            tablefmt="fancy_grid"
-        ))
-
-    else:
-        print(tabulate(
-            passos_filtrados,
-            headers=["Passo", "Pilha Estados", "Pilha Símbolos", "Entrada", "Ação"],
-            tablefmt="fancy_grid"
-        ))
+    imprimir_tabela_reducao(passos)
 
     print("\nAnálise SLR(1) concluída com sucesso!\n")
