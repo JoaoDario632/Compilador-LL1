@@ -11,6 +11,7 @@ Ele permite processar código fonte, identificar tokens e validar a sintaxe de p
 ├── grammar.py # Definição da gramática, funções first e follow
 ├── app.br # Exemplo de código da linguagem
 ├── slr_parser.py #Analisador Sintático SLR
+├── tabela.py  #Demonstração das tabelas de Redução do SLR, Tokens e os Resultados do First e Follow
 └── README.md # Documentação do projeto
 ```
 
