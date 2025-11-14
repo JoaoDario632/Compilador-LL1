@@ -1,15 +1,7 @@
 # -------------------------------------------------------------
 # grammar.py — Definição da gramática e funções FIRST / FOLLOW
 # -------------------------------------------------------------
-
 from collections import defaultdict, deque
-
-# -------------------------
-# DEFINIÇÃO DA GRAMÁTICA
-# -------------------------
-# Cada não-terminal (como "PROGRAMA_G") possui uma lista de produções.
-# Cada produção é uma lista de símbolos (terminais ou não-terminais).
-# O símbolo "ε" (epsilon) representa produção vazia.
 
 grammar = {
     # Programa principal = conjunto de funções + função principal
@@ -112,23 +104,11 @@ grammar = {
     ],
 }
 
-# Símbolo que representa produção vazia
 EPS = "ε"
-
-# ------------------------------------------------------------
-# FUNÇÕES AUXILIARES — Cálculo dos conjuntos FIRST e FOLLOW
-# ------------------------------------------------------------
-
 def all_firsts(G):
-    """
-    Calcula o conjunto FIRST para todos os não-terminais da gramática G.
-    Retorna um dicionário {não_terminal: conjunto_de_terminais}.
-    """
     EPS = "ε"
     FIRST = {nt: set() for nt in G}
     changed = True
-
-    # Loop até não haver mais mudanças (propagação completa dos FIRSTs)
     while changed:
         changed = False
         for A, prods in G.items():
@@ -139,73 +119,47 @@ def all_firsts(G):
                         FIRST[A].add(EPS)
                         changed = True
                     continue
-
-                # Percorre os símbolos da produção da esquerda para a direita
                 for X in prod:
                     if X not in G:
-                        # Se X é terminal, adiciona ele no FIRST de A
                         if X not in FIRST[A]:
                             FIRST[A].add(X)
                             changed = True
-                        break  # para ao encontrar o primeiro terminal
+                        break
                     else:
-                        # Se X é não-terminal, adiciona FIRST(X) - {ε} no FIRST(A)
                         novos = FIRST[X] - {EPS}
                         if not novos.issubset(FIRST[A]):
                             FIRST[A] |= novos
                             changed = True
-                        # Se X não gera ε, para o loop
                         if EPS not in FIRST[X]:
                             break
                 else:
-                    # Se todos os símbolos geram ε, adiciona ε em FIRST(A)
                     if EPS not in FIRST[A]:
                         FIRST[A].add(EPS)
                         changed = True
     return FIRST
 
-
 def first(simbolo, G):
-    """
-    Retorna o conjunto FIRST de um símbolo específico.
-    Se o símbolo for terminal, retorna ele mesmo como conjunto.
-    """
     FIRST = all_firsts(G)
-    if simbolo not in G:  # Se for terminal
+    if simbolo not in G:
         return {simbolo}
     return FIRST[simbolo]
 
-
 def first_seq(seq, FIRST):
-    """
-    Calcula o FIRST de uma sequência de símbolos (ex: [A, B, c]).
-    Considera a presença de ε corretamente.
-    """
     EPS = "ε"
     result = set()
     for X in seq:
-        # Adiciona FIRST(X) - {ε}
         result |= (FIRST.get(X, {X}) - {EPS})
-        # Se X não gera ε, interrompe
         if EPS not in FIRST.get(X, set()):
             break
     else:
-        # Se todos os símbolos geram ε, adiciona ε no resultado
         result.add(EPS)
     return result
 
 
 def follow(nao_terminal, grammar, start_symbol):
-    """
-    Calcula o conjunto FOLLOW de um não-terminal específico.
-    FOLLOW(A) contém os terminais que podem aparecer à direita de A
-    em alguma produção, durante a derivação da gramática.
-    """
     EPS = "ε"
     FIRST = all_firsts(grammar)
     FOLLOW = {nt: set() for nt in grammar}
-
-    # O símbolo inicial sempre contém EOF no FOLLOW
     FOLLOW[start_symbol].add("EOF")
 
     changed = True
@@ -214,29 +168,23 @@ def follow(nao_terminal, grammar, start_symbol):
         for A, producoes in grammar.items():
             for prod in producoes:
                 for i, simbolo in enumerate(prod):
-                    if simbolo in grammar:  # Se é não-terminal
-                        resto = prod[i + 1:]  # Símbolos que vêm depois dele
+                    if simbolo in grammar:
+                        resto = prod[i + 1:]
 
                         if resto:
-                            # FIRST do que vem depois
                             first_resto = first_seq(resto, FIRST)
-                            # Adiciona FIRST(resto) - {ε} no FOLLOW(simbolo)
                             for t in first_resto - {EPS}:
                                 if t not in FOLLOW[simbolo]:
                                     FOLLOW[simbolo].add(t)
                                     changed = True
-                            # Se ε está no FIRST(resto), propaga FOLLOW(A)
                             if EPS in first_resto:
                                 for t in FOLLOW[A]:
                                     if t not in FOLLOW[simbolo]:
                                         FOLLOW[simbolo].add(t)
                                         changed = True
                         else:
-                            # Se simbolo está no fim da produção,
-                            # propaga FOLLOW(A) → FOLLOW(simbolo)
                             for t in FOLLOW[A]:
                                 if t not in FOLLOW[simbolo]:
                                     FOLLOW[simbolo].add(t)
                                     changed = True
-    # Retorna apenas o FOLLOW do não-terminal solicitado
     return FOLLOW[nao_terminal]

@@ -35,7 +35,6 @@ class AnalisadorSintaticoLL1:
                         tabela[(cabeca, simbolo)] = producao
 
         return tabela
-
     def analisar(self, tokens):
 
         passos = []       
@@ -50,39 +49,43 @@ class AnalisadorSintaticoLL1:
             entrada_atual = ttoken
             pilha_visivel = " ".join(pilha[::-1])
             acao = ""
-
             if topo == ttoken:
                 acao = f"casar '{ttoken}'"
                 passos.append([Contador, pilha_visivel, entrada_atual, acao])
-
                 pos += 1
                 if pos < len(tokens):
                     ttoken = tokens[pos][0]
 
                 Contador += 1
                 continue
-
-            # CASO 2 — topo é não-terminal
             elif topo in self.gramatica:
                 regra = self.analiseTabela.get((topo, ttoken))
 
                 if not regra:
                     esperados = [k[1] for k in self.analiseTabela if k[0] == topo]
-                    acao = f"ERRO – esperado {esperados}, encontrado '{ttoken}'"
+                    acao = f"ERRO – esperado {esperados}, encontrado '{ttoken}' → entrando em modo pânico"
                     passos.append([Contador, pilha_visivel, entrada_atual, acao])
+                    Contador += 1
 
-                    # modo pânico:
                     follow_topo = follow(topo, self.gramatica, self.simbolo_inicial)
+
                     while ttoken not in follow_topo and ttoken != "EOF":
+                        acao = f"descartando token '{ttoken}' (modo pânico)"
+                        passos.append([Contador, pilha_visivel, entrada_atual, acao])
+
                         pos += 1
                         if pos < len(tokens):
                             ttoken = tokens[pos][0]
+                            entrada_atual = ttoken
                         else:
                             break
 
+                        Contador += 1
+
+                    acao = f"recuperação concluída — token '{ttoken}' está no FOLLOW({topo})"
+                    passos.append([Contador, pilha_visivel, entrada_atual, acao])
                     Contador += 1
                     continue
-
                 acao = f"expandir {topo} → {' '.join(regra) if regra else 'ε'}"
                 passos.append([Contador, pilha_visivel, entrada_atual, acao])
 
@@ -92,15 +95,11 @@ class AnalisadorSintaticoLL1:
 
                 Contador += 1
                 continue
-
-            # CASO 3 — ε
             elif topo == "ε":
                 acao = "produz ε"
                 passos.append([Contador, pilha_visivel, entrada_atual, acao])
                 Contador += 1
                 continue
-
-            # CASO 4 — erro terminal inesperado
             else:
                 acao = f"ERRO – encontrado '{ttoken}', esperado '{topo}'"
                 passos.append([Contador, pilha_visivel, entrada_atual, acao])
@@ -113,6 +112,7 @@ class AnalisadorSintaticoLL1:
 
                 Contador += 1
                 continue
+
         estadosFinais = passos[-10:] if len(passos) > 10 else passos
 
         print("\n=== TABELA DO PROCESSO DA ANÁLISE LL(1) — ÚLTIMOS 10 PASSOS ===\n")
