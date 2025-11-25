@@ -60,7 +60,9 @@ TERMO ::= IDENT | NUMERO_INT | NUMERO_REAL | PALAVRA | BOOLEANO | (EXPRESSAO) | 
 
 Este projeto uso da biblioteca tabulete, a qual realiza a formatação de dados tabulares, para que eles possa ser exibidos de forma legível
 > pip install tabulate
+<br>
 > pip install fpdf
+<br>
 > pip install fpdf2
 
 ## Para que o PDF seja gerado com as devidos caracteres, instale este arquivo através deste site
