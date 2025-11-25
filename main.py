@@ -25,7 +25,5 @@ def execucaoAnalisador(caminho_arquivo: str):
     gram_convertida, passos_slr = analisar_slr(tokens, grammar)
 
     gerar_pdf(tokens, passos_ll1, passos_slr, gram_convertida)
-
-# -------------- ESSENCIAL --------------
 if __name__ == "__main__":
     execucaoAnalisador("app.br")

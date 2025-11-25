@@ -9,7 +9,7 @@ class PDF(FPDF):
         # Caminho local da fonte enviada
         font_path = "DejaVuSans.ttf"
 
-        # Registrar fonte Unicode
+        # Registrar fonte Unicode completa
         self.add_font("DejaVu", "", font_path, uni=True)
 
         self.set_font("DejaVu", "", 12)
@@ -26,61 +26,59 @@ class PDF(FPDF):
 
     def chapter_body(self, text):
         self.set_font("DejaVu", "", 11)
-        self.multi_cell(0, 6, text)
+
+        safe_width = self.w - 20  # largura segura com margens
+        self.multi_cell(safe_width, 6, text, align="L")
         self.ln(2)
 
-
-def format_table(rows, col_widths=None):
-    lines = []
+def add_table(pdf, headers, rows, col_widths):
+    """
+    Cria uma tabela real usando recursos nativos do fpdf2.
+    """
+    pdf.set_font("DejaVu", "", 11)
+    for i, head in enumerate(headers):
+        pdf.set_fill_color(200, 200, 200)
+        pdf.set_text_color(0, 0, 0)
+        pdf.cell(col_widths[i], 8, txt=str(head), border=1, align="C", fill=True)
+    pdf.ln()
     for row in rows:
-        line = ""
         for i, cell in enumerate(row):
-            width = col_widths[i] if col_widths else 25
-            line += str(cell).ljust(width)
-        lines.append(line)
-    return "\n".join(lines)
+            pdf.set_fill_color(255, 255, 255)
+            pdf.cell(col_widths[i], 8, txt=str(cell), border=1, align="L")
+        pdf.ln()
 
+    pdf.ln(3)
 
 def gerar_pdf(tokens, passos_ll1, passos_slr, gram_convertida, caminho="relatorio_compilador.pdf"):
     pdf = PDF()
     pdf.add_page()
-
-    # ==========================
-    # TABELA DE TOKENS
-    # ==========================
     pdf.chapter_title("=== TABELA DE TOKENS ===")
-    tabela_tokens = [["Tipo", "Lexema"]]
-    for tk in tokens:
-        tabela_tokens.append([tk[0], tk[1] if tk[1] else ""])
-    pdf.chapter_body(format_table(tabela_tokens, [30, 40]))
 
-    # ==========================
-    # LL(1)
-    # ==========================
+    headers = ["Tipo", "Lexema"]
+    rows = [[tk[0], tk[1] if tk[1] else ""] for tk in tokens]
+    add_table(pdf, headers, rows, [40, 120])
     pdf.chapter_title("=== ÚLTIMOS PASSOS DO LL(1) ===")
-    ll1_rows = [["Passo", "Pilha", "Entrada", "Ação"]]
-    for passo in passos_ll1:
-        ll1_rows.append([passo[0], passo[1], passo[2], passo[3]])
-    pdf.chapter_body(format_table(ll1_rows, [10, 40, 12, 60]))
 
-    # ==========================
-    # GRAMÁTICA LR(0)
-    # ==========================
+    headers = ["Passo", "Pilha", "Entrada", "Ação"]
+    rows = [[p[0], p[1], p[2], p[3]] for p in passos_ll1]
+    add_table(pdf, headers, rows, [15, 60, 25, 80])
+
     pdf.chapter_title("=== GRAMÁTICA CONVERTIDA PARA LR(0) ===")
+
+    safe_width = pdf.w - 20
+
     for nt, producoes in gram_convertida.items():
         texto = f"{nt}:\n"
         for p in producoes:
-            texto += f"    • {' '.join(p) if p else 'ε'}\n"
-        pdf.chapter_body(texto)
+            texto += f" • {' '.join(p) if p else 'ε'}\n"
 
-    # ==========================
-    # SLR(1)
-    # ==========================
+        pdf.multi_cell(safe_width, 6, texto, align="L")
+        pdf.ln(1)
     pdf.chapter_title("=== ÚLTIMOS PASSOS DO SLR(1) ===")
-    slr_rows = [["Passo", "Pilha Estados", "Pilha Símbolos", "Entrada", "Ação"]]
-    for passo in passos_slr:
-        slr_rows.append([passo[0], passo[1], passo[2], passo[3], passo[4]])
-    pdf.chapter_body(format_table(slr_rows, [10, 30, 30, 10, 40]))
+
+    headers = ["Passo", "Pilha Estados", "Pilha Símbolos", "Entrada", "Ação"]
+    rows = [[p[0], p[1], p[2], p[3], p[4]] for p in passos_slr]
+    add_table(pdf, headers, rows, [15, 40, 40, 20, 60])
 
     pdf.output(caminho)
     print(f"\nPDF gerado com sucesso em: {caminho}\n")
