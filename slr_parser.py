@@ -174,4 +174,4 @@ def analisar_slr(tokens, G_original):
     # imprime últimos passos
     ReducaoFinal(passos)
 
-    print("\nAnálise SLR(1) concluída com sucesso!\n")
+    return G, passos

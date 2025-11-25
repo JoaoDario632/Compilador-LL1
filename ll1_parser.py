@@ -49,18 +49,24 @@ class AnalisadorSintaticoLL1:
             entrada_atual = ttoken
             pilha_visivel = " ".join(pilha[::-1])
             acao = ""
+
+            # Caso 1: casamento de token
             if topo == ttoken:
                 acao = f"casar '{ttoken}'"
                 passos.append([Contador, pilha_visivel, entrada_atual, acao])
+
                 pos += 1
                 if pos < len(tokens):
                     ttoken = tokens[pos][0]
 
                 Contador += 1
                 continue
+
+            # Caso 2: topo é não-terminal
             elif topo in self.gramatica:
                 regra = self.analiseTabela.get((topo, ttoken))
 
+                # ERRO SINTÁTICO
                 if not regra:
                     esperados = [k[1] for k in self.analiseTabela if k[0] == topo]
                     acao = f"ERRO – esperado {esperados}, encontrado '{ttoken}' → entrando em modo pânico"
@@ -86,6 +92,8 @@ class AnalisadorSintaticoLL1:
                     passos.append([Contador, pilha_visivel, entrada_atual, acao])
                     Contador += 1
                     continue
+
+                # EXPANSÃO DE REGRA
                 acao = f"expandir {topo} → {' '.join(regra) if regra else 'ε'}"
                 passos.append([Contador, pilha_visivel, entrada_atual, acao])
 
@@ -95,11 +103,15 @@ class AnalisadorSintaticoLL1:
 
                 Contador += 1
                 continue
+
+            # Caso 3: topo é epsilon
             elif topo == "ε":
                 acao = "produz ε"
                 passos.append([Contador, pilha_visivel, entrada_atual, acao])
                 Contador += 1
                 continue
+
+            # Caso 4: erro inesperado
             else:
                 acao = f"ERRO – encontrado '{ttoken}', esperado '{topo}'"
                 passos.append([Contador, pilha_visivel, entrada_atual, acao])
@@ -124,3 +136,5 @@ class AnalisadorSintaticoLL1:
         ))
 
         print("\nAnálise sintática concluída (modo pânico ativo).")
+
+        return passos
