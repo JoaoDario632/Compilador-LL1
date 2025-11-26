@@ -1,5 +1,12 @@
+# slr_parser.py
 from grammar import grammar, follow
 from tabela import GramaticaConvertida, ReducaoFinal
+def sanitize(text):
+    """
+    Remove quebras de linha / tabs e normaliza espaços.
+    Ex.: "A\nB   C" -> "A B C"
+    """
+    return " ".join(str(text).replace("\n", " ").replace("\t", " ").split())
 
 def Conversao(G):
     nova = {}
@@ -36,9 +43,11 @@ def itens_lr0(G):
         return frozenset(fecho)
 
     def GOTO(I, X):
-        mov = {(A, prod, ponto + 1)
-               for (A, prod, ponto) in I
-               if ponto < len(prod) and prod[ponto] == X}
+        mov = {
+            (A, prod, ponto + 1)
+            for (A, prod, ponto) in I
+            if ponto < len(prod) and prod[ponto] == X
+        }
         return fechamento(mov) if mov else frozenset()
 
     I0 = fechamento({("S'", (inicial,), 0)})
@@ -58,7 +67,6 @@ def itens_lr0(G):
                 trans[(i, X)] = estados.index(dest)
 
     return estados, trans, G2
-
 def ConstrucaoTabelaSLR(G):
 
     estados, trans, G2 = itens_lr0(G)
@@ -72,26 +80,32 @@ def ConstrucaoTabelaSLR(G):
 
             if p < len(prod):
                 sym = prod[p]
+                # símbolo de transição é terminal (shift)
                 if sym not in G:
                     j = trans.get((i, sym))
                     if j is not None:
                         acao[(i, sym)] = ("shift", j)
 
             else:
+                # ponto no fim da produção: reduce ou accept
                 if A == "S'":
                     acao[(i, "EOF")] = ("accept", None)
                 else:
                     for t in follow(A, grammar, start):
                         acao[(i, t)] = ("reduce", (A, prod))
 
+        # transições por não-terminais (goto)
         for nt in G.keys():
             j = trans.get((i, nt))
             if j is not None:
                 goto[(i, nt)] = j
 
     return acao, goto, estados
-
 def _formata_pilha_est(pilha, max_len=6):
+    """
+    Formata pilha de estados.
+    Ex.: [0, 1, 2, 3, 4, 5, 6] -> "... [2, 3, 4, 5, 6]"
+    """
     if len(pilha) <= max_len:
         return str(pilha)
     return f"... {pilha[-max_len:]}"
@@ -108,7 +122,8 @@ def _formata_acao(tipo, valor):
         return f"shift {valor}"
     if tipo == "reduce":
         A, prod = valor
-        rhs = " ".join(prod) if prod else "ε"
+        # sanitiza cada símbolo da produção
+        rhs = " ".join(sanitize(s) for s in prod) if prod else "ε"
         return f"reduce {A} → {rhs}"
     if tipo == "accept":
         return "accept"
@@ -116,8 +131,10 @@ def _formata_acao(tipo, valor):
 
 def analisar_slr(tokens, G_original):
 
+    # converte gramática (ε -> lista vazia)
     G = Conversao(G_original)
 
+    # imprime gramática convertida (tabela.py)
     GramaticaConvertida(G)
 
     # ACTION e GOTO
@@ -127,6 +144,7 @@ def analisar_slr(tokens, G_original):
     pilha_simb = []
     pos = 0
     simbolo = tokens[pos][0]
+
     passos = []
     n_pass = 1
 
@@ -141,12 +159,17 @@ def analisar_slr(tokens, G_original):
 
         tipo, valor = act
 
+        # strings sanitizadas (sem \n, tabs, espaços duplicados)
+        est_str = sanitize(_formata_pilha_est(pilha_est))
+        simb_str = sanitize(_formata_pilha_simb(pilha_simb))
+        acao_str = sanitize(_formata_acao(tipo, valor))
+
         passos.append([
             n_pass,
-            _formata_pilha_est(pilha_est),
-            _formata_pilha_simb(pilha_simb),
+            est_str,
+            simb_str,
             entrada,
-            _formata_acao(tipo, valor)
+            acao_str
         ])
 
         if tipo == "shift":
@@ -159,6 +182,7 @@ def analisar_slr(tokens, G_original):
 
         if tipo == "reduce":
             A, prod = valor
+            # desempilha quantidade de símbolos da produção
             for _ in prod:
                 pilha_est.pop()
                 pilha_simb.pop()
@@ -171,7 +195,8 @@ def analisar_slr(tokens, G_original):
         if tipo == "accept":
             break
 
-    # imprime últimos passos
+    # imprime redução final no terminal (tabela.py)
     ReducaoFinal(passos)
 
+    # retorna gramática convertida + todos os passos
     return G, passos
