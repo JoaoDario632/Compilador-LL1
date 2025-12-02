@@ -25,17 +25,19 @@ class PDF(FPDF):
 
 def abreviar(texto, limite):
     texto = str(texto)
-    return texto if len(texto) <= limite else texto[:limite - 3] + "..."
+    if len(texto) > limite and len(texto) > 12:
+        return texto[:limite - 3] + "..."
+    return texto
 
 
-def wrap_text(text, max_chars):
+def wrap_text(text, nmaximoChar):
     """Quebra texto em linhas sem quebrar palavras."""
     words = text.split()
     lines = []
     line = ""
 
     for w in words:
-        if len(line) + len(w) + 1 <= max_chars:
+        if len(line) + len(w) + 1 <= nmaximoChar:
             line += (" " + w) if line else w
         else:
             lines.append(line)
@@ -55,34 +57,34 @@ def draw_table(pdf, data, col_widths, line_height=6):
 
     for row in data:
 
-        cell_lines = []
+        linhasCelulas = []
         max_lines = 0
 
         for i, cell in enumerate(row):
             width = col_widths[i]
-            max_chars = int(width / 2.1)
+            nmaximoChar = max(8, int(width / 2.1))
 
-            # abrevia ANTES de quebrar
-            text = abreviar(cell, max_chars)
+            # abrevia só se for longo demais
+            text = abreviar(cell, nmaximoChar * 3)
 
-            wrapped = wrap_text(text, max_chars)
-            cell_lines.append(wrapped)
+            # quebra em múltiplas linhas
+            wrapped = wrap_text(text, nmaximoChar)
+            linhasCelulas.append(wrapped)
 
             if len(wrapped) > max_lines:
                 max_lines = len(wrapped)
 
         row_h = max_lines * line_height + 3
 
-        # quebra página automática
+        # quebra de página
         if pdf.get_y() + row_h > pdf.page_break_trigger:
             pdf.add_page()
 
         x_start = pdf.get_x()
         y_start = pdf.get_y()
-
         x = x_start
 
-        for i, lines in enumerate(cell_lines):
+        for i, lines in enumerate(linhasCelulas):
             width = col_widths[i]
 
             pdf.rect(x, y_start, width, row_h)
@@ -94,6 +96,7 @@ def draw_table(pdf, data, col_widths, line_height=6):
             x += width
 
         pdf.set_xy(x_start, y_start + row_h)
+
 #  FUNÇÃO PRINCIPAL: gerar_pdf()
 def gerar_pdf(tokens, passos_ll1, passos_slr, gram_convertida, caminho="relatorio_compilador.pdf"):
 
