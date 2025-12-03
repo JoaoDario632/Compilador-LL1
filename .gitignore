@@ -1,1 +1,7 @@
 __pycache__/
+*.pyc
+*.pkl
+*.pickle
+*.json
+*.dat
+*DejaVuSans*U*
