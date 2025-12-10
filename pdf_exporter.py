@@ -138,10 +138,10 @@ def gerar_pdf(tokens, passos_ll1, passos_slr, gram_convertida, caminho="relatori
 
     # LL(1)
     pdf.add_page()
-    pdf.chapter_title("=== ÚLTIMOS 10 PASSOS DO LL(1) ===")
+    pdf.chapter_title("=== ÚLTIMOS 25 PASSOS DO LL(1) ===")
 
     ll1_data = [["Passo", "Pilha", "Entrada", "Ação"]]
-    for p in passos_ll1[-10:]:
+    for p in passos_ll1[-25:]:
         ll1_data.append([p[0], p[1], p[2], p[3]])
 
     draw_table(pdf, ll1_data, [20, 70, 25, 75], pilha_cols=[1])

@@ -59,6 +59,8 @@ class AnalisadorSintaticoLL1:
                 if pos < len(tokens):
                     ttoken = tokens[pos][0]
 
+                # print(f"{Contador} - {pilha}")
+
                 Contador += 1
                 continue
 
@@ -71,6 +73,7 @@ class AnalisadorSintaticoLL1:
                     esperados = [k[1] for k in self.analiseTabela if k[0] == topo]
                     acao = f"ERRO – esperado {esperados}, encontrado '{ttoken}' → entrando em modo pânico"
                     passos.append([Contador, pilha_visivel, entrada_atual, acao])
+                    # print(f"{Contador} - {pilha}")
                     Contador += 1
 
                     follow_topo = follow(topo, self.gramatica, self.simbolo_inicial)
@@ -85,6 +88,8 @@ class AnalisadorSintaticoLL1:
                             entrada_atual = ttoken
                         else:
                             break
+
+                        # print(f"{Contador} - {pilha}")
 
                         Contador += 1
 
@@ -101,6 +106,8 @@ class AnalisadorSintaticoLL1:
                     if simbolo != "ε":
                         pilha.append(simbolo)
 
+                # print(f"{Contador} - {pilha}")
+
                 Contador += 1
                 continue
 
@@ -108,6 +115,7 @@ class AnalisadorSintaticoLL1:
             elif topo == "ε":
                 acao = "produz ε"
                 passos.append([Contador, pilha_visivel, entrada_atual, acao])
+                # print(f"{Contador} - {pilha}")
                 Contador += 1
                 continue
 
@@ -122,12 +130,14 @@ class AnalisadorSintaticoLL1:
                 else:
                     break
 
+                # print(f"{Contador} - {pilha}")
+
                 Contador += 1
                 continue
 
-        estadosFinais = passos[-10:] if len(passos) > 10 else passos
+        estadosFinais = passos[-25:] if len(passos) > 25 else passos
 
-        print("\n=== TABELA DO PROCESSO DA ANÁLISE LL(1) — ÚLTIMOS 10 PASSOS ===\n")
+        print("\n=== TABELA DO PROCESSO DA ANÁLISE LL(1) — ÚLTIMOS 25 PASSOS ===\n")
         print(tabulate(
             estadosFinais,
             headers=["Passo", "Pilha", "Entrada", "Ação"],
