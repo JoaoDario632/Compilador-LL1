@@ -5,7 +5,7 @@ from fpdf import FPDF
 class PDF(FPDF):
     def __init__(self):
         super().__init__()
-        
+
         # fontes dentro da pasta fonts/
         self.add_font("DejaVu", "", "fonts/DejaVuSans.ttf", uni=True)
         self.add_font("DejaVu", "B", "fonts/DejaVuSans-Bold.ttf", uni=True)
@@ -48,10 +48,17 @@ def wrap_text(text, nmaximoChar):
 
     return lines
 
+def quebrar_tokens(texto):
+    tokens = texto.split()
+    linhas = []
 
+    for i in range(0, len(tokens), 1):
+        linhas.append(" ".join(tokens[i:i + 1]))
+
+    return linhas
 
 #  TABELAS COM ABREVIAÇÃO
-def draw_table(pdf, data, col_widths, line_height=6):
+def draw_table(pdf, data, col_widths, line_height=6, pilha_cols=[]):
 
     pdf.set_font("DejaVu", "", 9)
 
@@ -64,19 +71,18 @@ def draw_table(pdf, data, col_widths, line_height=6):
             width = col_widths[i]
             nmaximoChar = max(8, int(width / 2.1))
 
-            # abrevia só se for longo demais
             text = abreviar(cell, nmaximoChar * 3)
+            
+            if i in pilha_cols:
+                wrapped = quebrar_tokens(text)
+            else:
+                wrapped = wrap_text(text, nmaximoChar)
 
-            # quebra em múltiplas linhas
-            wrapped = wrap_text(text, nmaximoChar)
             linhasCelulas.append(wrapped)
-
-            if len(wrapped) > max_lines:
-                max_lines = len(wrapped)
+            max_lines = max(max_lines, len(wrapped))
 
         row_h = max_lines * line_height + 3
 
-        # quebra de página
         if pdf.get_y() + row_h > pdf.page_break_trigger:
             pdf.add_page()
 
@@ -87,11 +93,19 @@ def draw_table(pdf, data, col_widths, line_height=6):
         for i, lines in enumerate(linhasCelulas):
             width = col_widths[i]
 
+            # desenha o retângulo
             pdf.rect(x, y_start, width, row_h)
-            pdf.set_xy(x + 1, y_start + 1)
 
-            for ln in lines:
-                pdf.cell(width - 2, line_height, ln, ln=1)
+            # salva posição interna
+            x_cell = x
+            y_cell = y_start
+
+            texto_formatado = "\n".join(lines)
+            pdf.set_xy(x_cell + 1, y_cell)
+            pdf.multi_cell(width - 2, line_height, texto_formatado)
+
+            # Após terminar a célula
+            pdf.set_xy(x + width, y_start)
 
             x += width
 
@@ -110,16 +124,6 @@ def gerar_pdf(tokens, passos_ll1, passos_slr, gram_convertida, caminho="relatori
     ]
     draw_table(pdf, tabela_tokens, [40, 120])
 
-    # LL(1)
-    pdf.add_page()
-    pdf.chapter_title("=== ÚLTIMOS 10 PASSOS DO LL(1) ===")
-
-    ll1_data = [["Passo", "Pilha", "Entrada", "Ação"]]
-    for p in passos_ll1[-10:]:
-        ll1_data.append([p[0], p[1], p[2], p[3]])
-
-    draw_table(pdf, ll1_data, [20, 70, 25, 75])
-
     # GRAMÁTICA
     pdf.add_page()
     pdf.chapter_title("=== GRAMÁTICA CONVERTIDA PARA LR(0) ===")
@@ -132,15 +136,25 @@ def gerar_pdf(tokens, passos_ll1, passos_slr, gram_convertida, caminho="relatori
         pdf.multi_cell(safe_width, 6, texto)
         pdf.ln(2)
 
+    # LL(1)
+    pdf.add_page()
+    pdf.chapter_title("=== ÚLTIMOS 10 PASSOS DO LL(1) ===")
+
+    ll1_data = [["Passo", "Pilha", "Entrada", "Ação"]]
+    for p in passos_ll1[-10:]:
+        ll1_data.append([p[0], p[1], p[2], p[3]])
+
+    draw_table(pdf, ll1_data, [20, 70, 25, 75], pilha_cols=[1])
+
     # SLR
     pdf.add_page()
     pdf.chapter_title("=== ÚLTIMOS 25 PASSOS DO SLR(1) ===")
 
     slr_data = [["Passo", "Estados", "Símbolos", "Entrada", "Ação"]]
-    for p in passos_slr[-25:]            :
+    for p in passos_slr[-25:]:
         slr_data.append([p[0], p[1], p[2], p[3], p[4]])
 
-    draw_table(pdf, slr_data, [20, 75, 75, 20, 75])
+    draw_table(pdf, slr_data, [20, 40, 60, 20, 50], pilha_cols=[2])
 
     pdf.output(caminho)
     print(f"\nPDF gerado com sucesso: {caminho}\n")

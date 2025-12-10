@@ -10,23 +10,23 @@ lexemas = [
     ("PARA",            r'para'),
     ("RETORNO",         r'retornar'),
     ("BOOLEANO",        r'verdadeiro|falso'),
-    ("NUMERO_REAL",     r'\d+\.\d+'),           
-    ("NUMERO_INT",      r'\d+'),                
-    ("CARACTERE",       r'\'.\''),              
-    ("PALAVRA",         r'"(?:\\.|[^"\\])*"'),  
-    ("IDENT",           r'[a-zA-Z_]\w*'),       
-    ("COMPAR",          r'[<>]=?|==|!='),       
-    ("OPER_ARIT",       r'[+\-*/%]'),           
-    ("OPER_LOGI_UN",    r'!'),                  
-    ("OPER_LOGI_BIN",   r'&&|\|\|'),            
-    ("ATRIB",           r'='),                  
-    ("LPAREN",          r'\('),                 
-    ("RPAREN",          r'\)'),                 
-    ("LCHAVE",          r'\{'),                 
-    ("RCHAVE",          r'\}'),                 
-    ("VIRGULA",         r','),      
+    ("NUMERO_REAL",     r'\d+\.\d+'),
+    ("NUMERO_INT",      r'\d+'),
+    ("CARACTERE",       r'\'.\''),
+    ("PALAVRA",         r'"(?:\\.|[^"\\])*"'),
+    ("IDENT",           r'[a-zA-Z_]\w*'),
+    ("COMPAR",          r'[<>]=?|==|!='),
+    ("OPER_ARIT",       r'[+\-*/%]'),
+    ("OPER_LOGI_UN",    r'!'),
+    ("OPER_LOGI_BIN",   r'&&|\|\|'),
+    ("ATRIB",           r'='),
+    ("LPAREN",          r'\('),
+    ("RPAREN",          r'\)'),
+    ("LCHAVE",          r'\{'),
+    ("RCHAVE",          r'\}'),
+    ("VIRGULA",         r','),
     ("PONTOVIRG",       r';'),
-    ("NOVA_LINHA",      r'\n'),                 
+    ("NOVA_LINHA",      r'\n'),
     ("IGNORAR",         r'[ \t]+'),
     ("INCOMPAT",        r'.'),
 ]
@@ -43,7 +43,7 @@ def analisador_lexico(codigo_fonte):
     for correspondencia in correspondencias:
         tipo_token = correspondencia.lastgroup
         vtoken = correspondencia.group()
-        
+
         if tipo_token == "NOVA_LINHA":
             linha += 1
             continue
